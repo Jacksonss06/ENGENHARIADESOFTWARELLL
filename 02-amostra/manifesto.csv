@@ -1,0 +1,31 @@
+id,nivel,arquivo,alvo,tipo
+CT01,facil,CT01_calculateDaysPassed.test.js,cycleUtils.calculateDaysPassed,unitario
+CT02,facil,CT02_canAdvanceCycle_true.test.js,cycleUtils.canAdvanceCycle,unitario
+CT03,facil,CT03_canAdvanceCycle_false.test.js,cycleUtils.canAdvanceCycle,unitario
+CT04,facil,CT04_advanceCycle.test.js,cycleUtils.advanceCycle,unitario
+CT05,facil,CT05_timer_formatTime.test.js,Timer.formatTime,unitario
+CT06,facil,CT06_timer_padTime.test.js,Timer.padTime,unitario
+CT07,facil,CT07_timeRange_day.test.js,getTimeRange(dia),unitario
+CT08,facil,CT08_timeRange_week.test.js,getTimeRange(semana),unitario
+CT09,facil,CT09_timeRange_month.test.js,getTimeRange(mês),unitario
+CT10,facil,CT10_timeRange_invalid.test.js,getTimeRange validação,unitario
+CT11,medio,CT11_adminMiddleware_admin.test.js,adminMiddleware,middleware
+CT12,medio,CT12_adminMiddleware_forbidden.test.js,adminMiddleware,middleware
+CT13,medio,CT13_validateRegister_missingUsername.test.js,validateRegister,middleware
+CT14,medio,CT14_validateRegister_passwordMismatch.test.js,validateRegister,middleware
+CT15,medio,CT15_validateRegister_weakPassword.test.js,validateRegister,middleware
+CT16,medio,CT16_validateRegister_valid.test.js,validateRegister,middleware
+CT17,medio,CT17_validateLogin_missingPassword.test.js,validateLogin,middleware
+CT18,medio,CT18_authMiddleware_missingToken.test.js,authMiddleware,middleware
+CT19,medio,CT19_authMiddleware_validToken.test.js,authMiddleware,middleware+mock
+CT20,medio,CT20_timeManager_sameDevice.test.js,getTimerForDevice,unitario estado
+CT21,dificil,CT21_graphicsService_period_pipeline.test.js,getMeasuresByPeriod,service+mock MongoDB
+CT22,dificil,CT22_graphicsService_custom_pipeline.test.js,getMeasuresByCustomPeriod,service+mock MongoDB
+CT23,dificil,CT23_graphicsController_custom_missingDates.test.js,getCustomPeriodMeasures,controller
+CT24,dificil,CT24_authController_login_success.test.js,authController.login,controller+multi-mock
+CT25,dificil,CT25_authController_register_duplicate.test.js,authController.register,controller+multi-mock
+CT26,dificil,CT26_devicesController_getOne_userScope.test.js,devicesController.getOneDevice,controller+autorização
+CT27,dificil,CT27_devicesController_cycleDevices.test.js,devicesController.cycleDevices,controller+estado+tempo
+CT28,dificil,CT28_exportController_invalidObjectId.test.js,exportController.csvDay,controller+validação
+CT29,dificil,CT29_exportController_filterDay.test.js,exportController.csvDay,controller+filtro temporal
+CT30,dificil,CT30_csvGenerator_stream.test.js,csvGenerator.generateCsv,stream+formatação
