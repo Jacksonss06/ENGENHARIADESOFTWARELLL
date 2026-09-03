@@ -1,0 +1,103 @@
+const adminMiddleware = require('./adminMiddleware');
+
+describe('adminMiddleware', () => {
+  let req, res, next;
+
+  beforeEach(() => {
+    req = {};
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+    };
+    next = jest.fn();
+  });
+
+  test('deve chamar next() quando usuário tem role admin', () => {
+    req.user = { role: 'admin' };
+
+    adminMiddleware(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 403 quando usuário não tem role admin', () => {
+    req.user = { role: 'user' };
+
+    adminMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Acesso negado: Admins apenas.' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 403 quando req.user é undefined', () => {
+    req.user = undefined;
+
+    adminMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Acesso negado: Admins apenas.' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 403 quando req.user é null', () => {
+    req.user = null;
+
+    adminMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Acesso negado: Admins apenas.' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 403 quando req.user não possui propriedade role', () => {
+    req.user = {};
+
+    adminMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Acesso negado: Admins apenas.' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 403 quando role é uma string vazia', () => {
+    req.user = { role: '' };
+
+    adminMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Acesso negado: Admins apenas.' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 403 quando role é diferente de admin (case sensitive)', () => {
+    req.user = { role: 'Admin' };
+
+    adminMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Acesso negado: Admins apenas.' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve chamar next() quando role é admin mesmo com outras propriedades no user', () => {
+    req.user = { id: 1, name: 'Teste', role: 'admin' };
+
+    adminMiddleware(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  test('não deve chamar next() quando req é um objeto vazio', () => {
+    req = {};
+
+    adminMiddleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Acesso negado: Admins apenas.' });
+    expect(next).not.toHaveBeenCalled();
+  });
+});

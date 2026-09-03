@@ -1,0 +1,121 @@
+```javascript
+const { calculateDaysPassed, canAdvanceCycle, advanceCycle } = require('./cycleUtils');
+
+describe('cycleUtils', () => {
+  const SYSTEM_TIME = new Date(2023, 9, 15, 12, 0, 0); // 15 de Outubro de 2023, 12:00:00 Local
+
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(SYSTEM_TIME);
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
+  describe('calculateDaysPassed', () => {
+    it('deve calcular corretamente a quantidade de dias passados para uma data no passado', () => {
+      const pastDate = new Date(2023, 9, 10, 10, 0, 0);
+      const days = calculateDaysPassed(pastDate);
+      expect(days).toBe(5);
+    });
+
+    it('deve retornar 0 se a data de início for o dia de hoje', () => {
+      const todayDate = new Date(2023, 9, 15, 8, 0, 0);
+      const days = calculateDaysPassed(todayDate);
+      expect(days).toBe(0);
+    });
+
+    it('deve retornar um número negativo para uma data no futuro', () => {
+      const futureDate = new Date(2023, 9, 20, 15, 0, 0);
+      const days = calculateDaysPassed(futureDate);
+      expect(days).toBe(-5);
+    });
+
+    it('deve processar corretamente datas enviadas como string ISO', () => {
+      const pastDateString = new Date(2023, 9, 5).toISOString();
+      const days = calculateDaysPassed(pastDateString);
+      expect(days).toBe(10);
+    });
+  });
+
+  describe('canAdvanceCycle', () => {
+    it('deve retornar true se a quantidade de dias for maior que o mínimo padrão (15)', () => {
+      const cycle = { startDate: new Date(2023, 8, 20) };
+      expect(canAdvanceCycle(cycle)).toBe(true);
+    });
+
+    it('deve retornar true se a quantidade de dias for exatamente o mínimo padrão (15)', () => {
+      const cycle = { startDate: new Date(2023, 8, 30) };
+      expect(canAdvanceCycle(cycle)).toBe(true);
+    });
+
+    it('deve retornar false se a quantidade de dias for menor que o mínimo padrão (15)', () => {
+      const cycle = { startDate: new Date(2023, 9, 5) };
+      expect(canAdvanceCycle(cycle)).toBe(false);
+    });
+
+    it('deve respeitar um parâmetro customizado de minDays (caso positivo)', () => {
+      const cycle = { startDate: new Date(2023, 9, 10) };
+      expect(canAdvanceCycle(cycle, 5)).toBe(true);
+    });
+
+    it('deve respeitar um parâmetro customizado de minDays (caso negativo)', () => {
+      const cycle = { startDate: new Date(2023, 9, 10) };
+      expect(canAdvanceCycle(cycle, 10)).toBe(false);
+    });
+  });
+
+  describe('advanceCycle', () => {
+    it('deve avançar o ciclo corretamente e atualizar os atributos', () => {
+      const initialCycle = {
+        currentCycle: 2,
+        startDate: new Date(2023, 8, 1),
+        daysPassed: 45,
+        manualAdvance: false,
+        otherProperty: 'unchanged'
+      };
+
+      const result = advanceCycle(initialCycle);
+
+      expect(result.currentCycle).toBe(3);
+      expect(result.startDate).toEqual(SYSTEM_TIME);
+      expect(result.daysPassed).toBe(0);
+      expect(result.manualAdvance).toBe(true);
+      expect(result.otherProperty).toBe('unchanged');
+    });
+
+    it('deve retornar a mesma referência de objeto (verificação de mutação)', () => {
+      const initialCycle = {
+        currentCycle: 1,
+        startDate: new Date(2023, 9, 1)
+      };
+
+      const result = advanceCycle(initialCycle);
+
+      expect(result).toBe(initialCycle);
+    });
+
+    it('deve inicializar propriedades faltantes corretamente no objeto de ciclo', () => {
+      const partialCycle = {
+        currentCycle: 0
+      };
+
+      const result = advanceCycle(partialCycle);
+
+      expect(result.currentCycle).toBe(1);
+      expect(result.startDate).toEqual(SYSTEM_TIME);
+      expect(result.daysPassed).toBe(0);
+      expect(result.manualAdvance).toBe(true);
+    });
+
+    it('deve lidar corretamente com ciclos atuais negativos ou zerados', () => {
+      const cycleZero = { currentCycle: 0 };
+      expect(advanceCycle(cycleZero).currentCycle).toBe(1);
+
+      const cycleNegative = { currentCycle: -5 };
+      expect(advanceCycle(cycleNegative).currentCycle).toBe(-4);
+    });
+  });
+});
+```

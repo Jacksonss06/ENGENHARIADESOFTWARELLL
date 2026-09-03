@@ -1,0 +1,137 @@
+const { login } = require('./authController');
+const User = require('../model/User');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+jest.mock('../model/User');
+jest.mock('bcryptjs');
+jest.mock('jsonwebtoken');
+jest.mock('../config/nodemail', () => jest.fn());
+jest.mock('../middlewares/authMiddleware', () => ({
+    blacklist: []
+}));
+
+describe('authController.login', () => {
+    let req;
+    let res;
+    let originalSecret;
+
+    beforeAll(() => {
+        originalSecret = process.env.SECRET;
+        process.env.SECRET = 'test-secret';
+    });
+
+    afterAll(() => {
+        process.env.SECRET = originalSecret;
+    });
+
+    beforeEach(() => {
+        req = {
+            body: {
+                email: 'user@example.com',
+                password: 'password123',
+            },
+        };
+
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn(),
+        };
+
+        jest.clearAllMocks();
+    });
+
+    it('deve realizar login com sucesso e retornar o token JWT', async () => {
+        const mockUser = {
+            _id: 'userId123',
+            role: 'admin',
+            password: 'hashedPassword',
+        };
+
+        User.findOne.mockResolvedValue(mockUser);
+        bcrypt.compare.mockResolvedValue(true);
+        jwt.sign.mockReturnValue('mocked-jwt-token');
+
+        await login(req, res);
+
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'user@example.com' });
+        expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword');
+        expect(jwt.sign).toHaveBeenCalledWith(
+            { id: 'userId123', role: 'admin' },
+            'test-secret'
+        );
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith({
+            msg: 'Autenticação realizada com sucesso!',
+            token: 'mocked-jwt-token',
+        });
+    });
+
+    it('deve retornar 404 se o email não for encontrado', async () => {
+        User.findOne.mockResolvedValue(null);
+
+        await login(req, res);
+
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'user@example.com' });
+        expect(bcrypt.compare).not.toHaveBeenCalled();
+        expect(jwt.sign).not.toHaveBeenCalled();
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Email não encontrado!' });
+    });
+
+    it('deve retornar 422 se a senha for inválida', async () => {
+        const mockUser = {
+            _id: 'userId123',
+            role: 'user',
+            password: 'hashedPassword',
+        };
+
+        User.findOne.mockResolvedValue(mockUser);
+        bcrypt.compare.mockResolvedValue(false);
+
+        await login(req, res);
+
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'user@example.com' });
+        expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword');
+        expect(jwt.sign).not.toHaveBeenCalled();
+        expect(res.status).toHaveBeenCalledWith(422);
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Senha Inválida!' });
+    });
+
+    it('deve retornar 500 se ocorrer um erro durante a assinatura do token', async () => {
+        const mockUser = {
+            _id: 'userId123',
+            role: 'user',
+            password: 'hashedPassword',
+        };
+
+        User.findOne.mockResolvedValue(mockUser);
+        bcrypt.compare.mockResolvedValue(true);
+        
+        jwt.sign.mockImplementation(() => {
+            throw new Error('Erro ao gerar JWT');
+        });
+
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+        await login(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Erro no servidor, tente novamente mais tarde!' });
+
+        consoleSpy.mockRestore();
+    });
+
+    it('deve retornar 500 se o banco de dados lançar uma exceção', async () => {
+        User.findOne.mockRejectedValue(new Error('Erro de Conexão DB'));
+
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+        await login(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Erro no servidor, tente novamente mais tarde!' });
+
+        consoleSpy.mockRestore();
+    });
+});

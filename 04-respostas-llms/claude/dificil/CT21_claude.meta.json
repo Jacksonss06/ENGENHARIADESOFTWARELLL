@@ -1,0 +1,33 @@
+{
+  "id": "CT21",
+  "dificuldade": "dificil",
+  "llm": "claude",
+  "provedor": "Anthropic",
+  "modelo_solicitado": "claude-sonnet-5",
+  "modelo_retornado": "claude-sonnet-5",
+  "data_hora_utc": "2026-09-03T20:50:22.886Z",
+  "http_status": 200,
+  "response_id": "msg_011CehAaQbbAebLpHX1ATcyD",
+  "max_output_tokens": 8192,
+  "retry_automatico": false,
+  "parametros": {
+    "openai_reasoning_effort": null
+  },
+  "usage": {
+    "input_tokens": 1480,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 4193,
+    "output_tokens_details": {
+      "thinking_tokens": 41
+    },
+    "service_tier": "standard",
+    "inference_geo": "global"
+  },
+  "prompt_sha256": "9917dcea479d66773f9f942ff3abe64b2cafd3f9376fffe65bfd0a3fb788a68a",
+  "unidade_sha256": "288413ecdf0da7eda3221bd533814cc7fd120209d9fc7a4bda3ff30a20ba217e"
+}

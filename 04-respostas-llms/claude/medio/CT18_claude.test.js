@@ -1,0 +1,105 @@
+const jwt = require('jsonwebtoken')
+const { authMiddleware, blacklist } = require('./authMiddleware')
+
+jest.mock('jsonwebtoken')
+
+describe('authMiddleware', () => {
+    let req, res, next
+
+    beforeEach(() => {
+        req = {
+            header: jest.fn()
+        }
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn().mockReturnThis()
+        }
+        next = jest.fn()
+        blacklist.length = 0
+        jest.clearAllMocks()
+    })
+
+    test('deve retornar 401 quando o cabeçalho Authorization não é enviado', () => {
+        req.header.mockReturnValue(undefined)
+
+        authMiddleware(req, res, next)
+
+        expect(req.header).toHaveBeenCalledWith('Authorization')
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Acesso negado!' })
+        expect(next).not.toHaveBeenCalled()
+    })
+
+    test('deve retornar 401 quando o cabeçalho Authorization está vazio', () => {
+        req.header.mockReturnValue('')
+
+        authMiddleware(req, res, next)
+
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Acesso negado!' })
+        expect(next).not.toHaveBeenCalled()
+    })
+
+    test('deve retornar 401 quando o cabeçalho contém apenas "Bearer " sem token', () => {
+        req.header.mockReturnValue('Bearer ')
+
+        authMiddleware(req, res, next)
+
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Acesso negado!' })
+        expect(next).not.toHaveBeenCalled()
+    })
+
+    test('deve retornar 401 quando o token está na blacklist', () => {
+        const token = 'blacklisted-token'
+        blacklist.push(token)
+        req.header.mockReturnValue(`Bearer ${token}`)
+
+        authMiddleware(req, res, next)
+
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Token inválido!' })
+        expect(next).not.toHaveBeenCalled()
+        expect(jwt.verify).not.toHaveBeenCalled()
+    })
+
+    test('deve chamar next() e setar req.user quando o token é válido', () => {
+        const token = 'valid-token'
+        const decodedPayload = { id: 1, name: 'Test User' }
+        req.header.mockReturnValue(`Bearer ${token}`)
+        jwt.verify.mockReturnValue(decodedPayload)
+
+        authMiddleware(req, res, next)
+
+        expect(jwt.verify).toHaveBeenCalledWith(token, process.env.SECRET)
+        expect(req.user).toEqual(decodedPayload)
+        expect(next).toHaveBeenCalledTimes(1)
+        expect(res.status).not.toHaveBeenCalled()
+    })
+
+    test('deve retornar 401 quando jwt.verify lança um erro', () => {
+        const token = 'invalid-token'
+        req.header.mockReturnValue(`Bearer ${token}`)
+        jwt.verify.mockImplementation(() => {
+            throw new Error('invalid signature')
+        })
+
+        authMiddleware(req, res, next)
+
+        expect(jwt.verify).toHaveBeenCalledWith(token, process.env.SECRET)
+        expect(res.status).toHaveBeenCalledWith(401)
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Token inválido!' })
+        expect(next).not.toHaveBeenCalled()
+    })
+
+    test('deve extrair corretamente o token removendo apenas o prefixo "Bearer "', () => {
+        const token = 'abc123.def456.ghi789'
+        req.header.mockReturnValue(`Bearer ${token}`)
+        jwt.verify.mockReturnValue({ id: 2 })
+
+        authMiddleware(req, res, next)
+
+        expect(jwt.verify).toHaveBeenCalledWith(token, process.env.SECRET)
+        expect(next).toHaveBeenCalled()
+    })
+})

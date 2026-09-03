@@ -1,0 +1,69 @@
+const { getTimeRange } = require('./timeRange');
+
+describe('getTimeRange', () => {
+    beforeAll(() => {
+        jest.useFakeTimers();
+        jest.setSystemTime(new Date('2023-10-15T12:00:00Z')); // Domingo
+    });
+
+    afterAll(() => {
+        jest.useRealTimers();
+    });
+
+    describe('Casos de Sucesso', () => {
+        it('deve retornar o intervalo correto para o período "dia"', () => {
+            const { start, end } = getTimeRange('dia', '2023-10-15T12:00:00Z');
+            
+            expect(start.toISOString()).toBe('2023-10-15T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-10-15T23:59:59.000Z');
+        });
+
+        it('deve retornar o intervalo correto para o período "semana" (iniciando na segunda-feira)', () => {
+            const { start, end } = getTimeRange('semana', '2023-10-15T12:00:00Z');
+            
+            expect(start.toISOString()).toBe('2023-10-09T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-10-15T23:59:59.000Z');
+        });
+
+        it('deve retornar o intervalo correto para o período "mês"', () => {
+            const { start, end } = getTimeRange('mês', '2023-10-15T12:00:00Z');
+            
+            expect(start.toISOString()).toBe('2023-10-01T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-10-31T23:59:59.000Z');
+        });
+
+        it('deve retornar o intervalo correto para o período "mês" em ano bissexto', () => {
+            const { start, end } = getTimeRange('mês', '2024-02-15T12:00:00Z');
+            
+            expect(start.toISOString()).toBe('2024-02-01T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2024-02-29T23:59:59.000Z');
+        });
+
+        it('deve utilizar a data atual quando targetDate não for fornecida', () => {
+            const { start, end } = getTimeRange('dia');
+            
+            expect(start.toISOString()).toBe('2023-10-15T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-10-15T23:59:59.000Z');
+        });
+    });
+
+    describe('Casos de Falha e Bordas', () => {
+        it('deve lançar erro quando o período for inválido (Alvo experimental)', () => {
+            expect(() => {
+                getTimeRange('ano', '2023-10-15T12:00:00Z');
+            }).toThrow('Período inválido');
+        });
+
+        it('deve lançar erro quando o período não for fornecido', () => {
+            expect(() => {
+                getTimeRange(undefined, '2023-10-15T12:00:00Z');
+            }).toThrow('Período inválido');
+        });
+
+        it('deve lançar erro quando a data fornecida for inválida', () => {
+            expect(() => {
+                getTimeRange('dia', 'data-invalida-123');
+            }).toThrow('Data inválida');
+        });
+    });
+});

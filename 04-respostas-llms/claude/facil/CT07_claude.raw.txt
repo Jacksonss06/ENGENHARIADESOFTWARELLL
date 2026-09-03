@@ -1,0 +1,140 @@
+```javascript
+const { getTimeRange } = require('../src/utils/timeRange')
+
+describe('getTimeRange', () => {
+    describe('período: dia', () => {
+        it('deve retornar o intervalo correto de um dia específico', () => {
+            const { start, end } = getTimeRange('dia', '2024-05-15T10:30:00Z')
+
+            expect(start.toISOString()).toBe('2024-05-15T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-05-15T23:59:59.000Z')
+        })
+
+        it('deve retornar o intervalo correto usando a data atual quando targetDate não é informado', () => {
+            const now = new Date()
+            const { start, end } = getTimeRange('dia')
+
+            expect(start.getUTCFullYear()).toBe(now.getUTCFullYear())
+            expect(start.getUTCMonth()).toBe(now.getUTCMonth())
+            expect(start.getUTCDate()).toBe(now.getUTCDate())
+            expect(start.getUTCHours()).toBe(0)
+            expect(start.getUTCMinutes()).toBe(0)
+            expect(start.getUTCSeconds()).toBe(0)
+
+            expect(end.getUTCFullYear()).toBe(now.getUTCFullYear())
+            expect(end.getUTCMonth()).toBe(now.getUTCMonth())
+            expect(end.getUTCDate()).toBe(now.getUTCDate())
+            expect(end.getUTCHours()).toBe(23)
+            expect(end.getUTCMinutes()).toBe(59)
+            expect(end.getUTCSeconds()).toBe(59)
+        })
+
+        it('deve lidar corretamente com o último dia do mês', () => {
+            const { start, end } = getTimeRange('dia', '2024-01-31T00:00:00Z')
+
+            expect(start.toISOString()).toBe('2024-01-31T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-01-31T23:59:59.000Z')
+        })
+
+        it('deve lidar corretamente com o último dia do ano', () => {
+            const { start, end } = getTimeRange('dia', '2024-12-31T12:00:00Z')
+
+            expect(start.toISOString()).toBe('2024-12-31T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-12-31T23:59:59.000Z')
+        })
+
+        it('deve lidar corretamente com ano bissexto (29 de fevereiro)', () => {
+            const { start, end } = getTimeRange('dia', '2024-02-29T15:00:00Z')
+
+            expect(start.toISOString()).toBe('2024-02-29T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-02-29T23:59:59.000Z')
+        })
+    })
+
+    describe('período: semana', () => {
+        it('deve retornar o intervalo correto de segunda a domingo', () => {
+            const { start, end } = getTimeRange('semana', '2024-05-15T10:00:00Z') // quarta-feira
+
+            expect(start.toISOString()).toBe('2024-05-13T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-05-19T23:59:59.000Z')
+        })
+
+        it('deve lidar corretamente quando a data é um domingo', () => {
+            const { start, end } = getTimeRange('semana', '2024-05-19T10:00:00Z') // domingo
+
+            expect(start.toISOString()).toBe('2024-05-13T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-05-19T23:59:59.000Z')
+        })
+
+        it('deve lidar corretamente quando a data é uma segunda-feira', () => {
+            const { start, end } = getTimeRange('semana', '2024-05-13T10:00:00Z')
+
+            expect(start.toISOString()).toBe('2024-05-13T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-05-19T23:59:59.000Z')
+        })
+    })
+
+    describe('período: mês', () => {
+        it('deve retornar o intervalo correto de um mês com 31 dias', () => {
+            const { start, end } = getTimeRange('mês', '2024-01-15T10:00:00Z')
+
+            expect(start.toISOString()).toBe('2024-01-01T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-01-31T23:59:59.000Z')
+        })
+
+        it('deve retornar o intervalo correto de um mês com 30 dias', () => {
+            const { start, end } = getTimeRange('mês', '2024-04-10T10:00:00Z')
+
+            expect(start.toISOString()).toBe('2024-04-01T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-04-30T23:59:59.000Z')
+        })
+
+        it('deve retornar o intervalo correto de fevereiro em ano bissexto', () => {
+            const { start, end } = getTimeRange('mês', '2024-02-10T10:00:00Z')
+
+            expect(start.toISOString()).toBe('2024-02-01T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-02-29T23:59:59.000Z')
+        })
+
+        it('deve retornar o intervalo correto de fevereiro em ano não bissexto', () => {
+            const { start, end } = getTimeRange('mês', '2023-02-10T10:00:00Z')
+
+            expect(start.toISOString()).toBe('2023-02-01T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2023-02-28T23:59:59.000Z')
+        })
+
+        it('deve lidar corretamente com dezembro (mudança de ano)', () => {
+            const { start, end } = getTimeRange('mês', '2024-12-15T10:00:00Z')
+
+            expect(start.toISOString()).toBe('2024-12-01T00:00:00.000Z')
+            expect(end.toISOString()).toBe('2024-12-31T23:59:59.000Z')
+        })
+    })
+
+    describe('casos de erro', () => {
+        it('deve lançar erro para período inválido', () => {
+            expect(() => getTimeRange('ano', '2024-05-15T10:00:00Z')).toThrow('Período inválido')
+        })
+
+        it('deve lançar erro para período vazio', () => {
+            expect(() => getTimeRange('', '2024-05-15T10:00:00Z')).toThrow('Período inválido')
+        })
+
+        it('deve lançar erro para período undefined', () => {
+            expect(() => getTimeRange(undefined, '2024-05-15T10:00:00Z')).toThrow('Período inválido')
+        })
+
+        it('deve lançar erro para data inválida', () => {
+            expect(() => getTimeRange('dia', 'data-invalida')).toThrow('Data inválida')
+        })
+
+        it('deve lançar erro para data inválida com período semana', () => {
+            expect(() => getTimeRange('semana', 'not-a-date')).toThrow('Data inválida')
+        })
+
+        it('deve lançar erro para data inválida com período mês', () => {
+            expect(() => getTimeRange('mês', 'invalid')).toThrow('Data inválida')
+        })
+    })
+})
+```

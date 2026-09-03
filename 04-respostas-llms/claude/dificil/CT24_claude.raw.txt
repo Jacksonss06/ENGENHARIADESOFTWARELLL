@@ -1,0 +1,166 @@
+```javascript
+jest.mock('../model/User')
+jest.mock('bcryptjs')
+jest.mock('jsonwebtoken')
+jest.mock('crypto')
+jest.mock('../config/nodemail')
+jest.mock('../middlewares/authMiddleware', () => ({
+    blacklist: []
+}))
+
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const User = require('../model/User')
+const authController = require('./authController')
+
+describe('authController.login', () => {
+    let req, res
+
+    beforeEach(() => {
+        req = {
+            body: {
+                email: 'user@example.com',
+                password: 'senha123'
+            }
+        }
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        }
+        process.env.SECRET = 'test_secret'
+        jest.clearAllMocks()
+    })
+
+    it('deve retornar 200 e um token quando login for bem-sucedido', async () => {
+        const fakeUser = {
+            _id: 'user_id_123',
+            email: 'user@example.com',
+            password: 'hashed_password',
+            role: 'user'
+        }
+
+        User.findOne.mockResolvedValue(fakeUser)
+        bcrypt.compare.mockResolvedValue(true)
+        jwt.sign.mockReturnValue('fake_jwt_token')
+
+        await authController.login(req, res)
+
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'user@example.com' })
+        expect(bcrypt.compare).toHaveBeenCalledWith('senha123', 'hashed_password')
+        expect(jwt.sign).toHaveBeenCalledWith(
+            { id: fakeUser._id, role: fakeUser.role },
+            'test_secret'
+        )
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith({
+            msg: 'Autenticação realizada com sucesso!',
+            token: 'fake_jwt_token'
+        })
+    })
+
+    it('deve retornar 404 quando o email não for encontrado', async () => {
+        User.findOne.mockResolvedValue(null)
+
+        await authController.login(req, res)
+
+        expect(User.findOne).toHaveBeenCalledWith({ email: 'user@example.com' })
+        expect(res.status).toHaveBeenCalledWith(404)
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Email não encontrado!' })
+        expect(bcrypt.compare).not.toHaveBeenCalled()
+    })
+
+    it('deve retornar 422 quando a senha for inválida', async () => {
+        const fakeUser = {
+            _id: 'user_id_123',
+            email: 'user@example.com',
+            password: 'hashed_password',
+            role: 'user'
+        }
+
+        User.findOne.mockResolvedValue(fakeUser)
+        bcrypt.compare.mockResolvedValue(false)
+
+        await authController.login(req, res)
+
+        expect(bcrypt.compare).toHaveBeenCalledWith('senha123', 'hashed_password')
+        expect(res.status).toHaveBeenCalledWith(422)
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Senha Inválida!' })
+        expect(jwt.sign).not.toHaveBeenCalled()
+    })
+
+    it('deve retornar 500 quando ocorrer erro ao gerar o token JWT', async () => {
+        const fakeUser = {
+            _id: 'user_id_123',
+            email: 'user@example.com',
+            password: 'hashed_password',
+            role: 'user'
+        }
+
+        User.findOne.mockResolvedValue(fakeUser)
+        bcrypt.compare.mockResolvedValue(true)
+        jwt.sign.mockImplementation(() => {
+            throw new Error('Erro ao assinar token')
+        })
+
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+
+        await authController.login(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(500)
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Erro no servidor, tente novamente mais tarde!' })
+
+        consoleSpy.mockRestore()
+    })
+
+    it('deve retornar 500 quando ocorrer um erro inesperado durante a busca do usuário', async () => {
+        User.findOne.mockRejectedValue(new Error('Erro de banco de dados'))
+
+        await expect(authController.login(req, res)).rejects.toThrow('Erro de banco de dados')
+    })
+
+    it('deve chamar bcrypt.compare com os parâmetros corretos mesmo com senha vazia', async () => {
+        req.body.password = ''
+        const fakeUser = {
+            _id: 'user_id_123',
+            email: 'user@example.com',
+            password: 'hashed_password',
+            role: 'user'
+        }
+
+        User.findOne.mockResolvedValue(fakeUser)
+        bcrypt.compare.mockResolvedValue(false)
+
+        await authController.login(req, res)
+
+        expect(bcrypt.compare).toHaveBeenCalledWith('', 'hashed_password')
+        expect(res.status).toHaveBeenCalledWith(422)
+        expect(res.json).toHaveBeenCalledWith({ msg: 'Senha Inválida!' })
+    })
+
+    it('deve gerar o token com o role correto do usuário admin', async () => {
+        const fakeAdmin = {
+            _id: 'admin_id_456',
+            email: 'admin@example.com',
+            password: 'hashed_password',
+            role: 'admin'
+        }
+
+        req.body.email = 'admin@example.com'
+        User.findOne.mockResolvedValue(fakeAdmin)
+        bcrypt.compare.mockResolvedValue(true)
+        jwt.sign.mockReturnValue('admin_jwt_token')
+
+        await authController.login(req, res)
+
+        expect(jwt.sign).toHaveBeenCalledWith(
+            { id: fakeAdmin._id, role: 'admin' },
+            'test_secret'
+        )
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith({
+            msg: 'Autenticação realizada com sucesso!',
+            token: 'admin_jwt_token'
+        })
+    })
+})
+```

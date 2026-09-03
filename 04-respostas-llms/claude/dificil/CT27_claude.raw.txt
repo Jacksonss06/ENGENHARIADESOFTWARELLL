@@ -1,0 +1,190 @@
+```javascript
+const devicesController = require('../src/controllers/devicesController')
+const Devices = require('../src/model/Devices')
+
+jest.mock('../src/model/Devices')
+jest.mock('../src/utils/time')
+jest.mock('../src/utils/timeManager')
+jest.mock('../src/utils/cycleUtils')
+jest.mock('fs')
+jest.mock('../src/config/cloudinary')
+
+describe('devicesController.cycleDevices', () => {
+    let req, res
+
+    beforeEach(() => {
+        jest.clearAllMocks()
+        req = {
+            params: { deviceId: 'device123' },
+            user: { id: 'user123', role: 'user' },
+        }
+        res = {
+            json: jest.fn(),
+            status: jest.fn().mockReturnThis(),
+        }
+        jest.spyOn(console, 'log').mockImplementation(() => {})
+        jest.spyOn(console, 'error').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+        jest.restoreAllMocks()
+    })
+
+    it('deve retornar 404 quando dispositivo não é encontrado (usuário comum)', async () => {
+        Devices.findOne.mockResolvedValue(null)
+
+        await devicesController.cycleDevices(req, res)
+
+        expect(Devices.findOne).toHaveBeenCalledWith({ _id: 'device123', user: 'user123' })
+        expect(res.status).toHaveBeenCalledWith(404)
+        expect(res.json).toHaveBeenCalledWith({ error: 'Dispositivo não encontrado ou você não tem permissão.' })
+    })
+
+    it('deve retornar 404 quando dispositivo não é encontrado (admin)', async () => {
+        req.user.role = 'admin'
+        Devices.findById.mockResolvedValue(null)
+
+        await devicesController.cycleDevices(req, res)
+
+        expect(Devices.findById).toHaveBeenCalledWith('device123')
+        expect(res.status).toHaveBeenCalledWith(404)
+        expect(res.json).toHaveBeenCalledWith({ error: 'Dispositivo não encontrado ou você não tem permissão.' })
+    })
+
+    it('deve criar o primeiro ciclo quando não existem ciclos anteriores', async () => {
+        const mockSave = jest.fn().mockResolvedValue(true)
+        const mockDevice = {
+            cycles: [],
+            lastCycleUpdate: null,
+            save: mockSave,
+        }
+        Devices.findOne.mockResolvedValue(mockDevice)
+
+        await devicesController.cycleDevices(req, res)
+
+        expect(mockDevice.cycles.length).toBe(1)
+        expect(mockDevice.cycles[0].currentCycle).toBe(1)
+        expect(mockDevice.cycles[0].daysPassed).toBe(0)
+        expect(mockDevice.cycles[0].manualAdvance).toBe(true)
+        expect(mockDevice.cycles[0].startDate).toBeInstanceOf(Date)
+        expect(mockDevice.lastCycleUpdate).toBe(mockDevice.cycles[0].startDate)
+        expect(mockSave).toHaveBeenCalled()
+        expect(res.json).toHaveBeenCalledWith({
+            message: 'Novo ciclo iniciado com sucesso',
+            cycle: mockDevice.cycles[0],
+        })
+    })
+
+    it('deve incrementar o currentCycle com base no último ciclo existente', async () => {
+        const mockSave = jest.fn().mockResolvedValue(true)
+        const existingCycle = {
+            startDate: new Date('2023-01-01'),
+            currentCycle: 3,
+            daysPassed: 5,
+            manualAdvance: false,
+        }
+        const mockDevice = {
+            cycles: [existingCycle],
+            lastCycleUpdate: null,
+            save: mockSave,
+        }
+        Devices.findOne.mockResolvedValue(mockDevice)
+
+        await devicesController.cycleDevices(req, res)
+
+        expect(mockDevice.cycles.length).toBe(2)
+        expect(mockDevice.cycles[1].currentCycle).toBe(4)
+        expect(mockDevice.cycles[1].daysPassed).toBe(0)
+        expect(mockDevice.cycles[1].manualAdvance).toBe(true)
+        expect(mockSave).toHaveBeenCalled()
+        expect(res.json).toHaveBeenCalledWith({
+            message: 'Novo ciclo iniciado com sucesso',
+            cycle: mockDevice.cycles[1],
+        })
+    })
+
+    it('deve usar Devices.findById quando usuário é admin e adicionar novo ciclo', async () => {
+        req.user.role = 'admin'
+        const mockSave = jest.fn().mockResolvedValue(true)
+        const mockDevice = {
+            cycles: [],
+            lastCycleUpdate: null,
+            save: mockSave,
+        }
+        Devices.findById.mockResolvedValue(mockDevice)
+
+        await devicesController.cycleDevices(req, res)
+
+        expect(Devices.findById).toHaveBeenCalledWith('device123')
+        expect(mockDevice.cycles.length).toBe(1)
+        expect(mockDevice.cycles[0].currentCycle).toBe(1)
+        expect(mockSave).toHaveBeenCalled()
+        expect(res.json).toHaveBeenCalledWith({
+            message: 'Novo ciclo iniciado com sucesso',
+            cycle: mockDevice.cycles[0],
+        })
+    })
+
+    it('deve retornar 500 quando ocorre erro ao buscar o dispositivo', async () => {
+        const error = new Error('Erro de banco de dados')
+        Devices.findOne.mockRejectedValue(error)
+
+        await devicesController.cycleDevices(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(500)
+        expect(res.json).toHaveBeenCalledWith({
+            error: 'Erro ao iniciar novo ciclo',
+            details: 'Erro de banco de dados',
+        })
+    })
+
+    it('deve retornar 500 quando ocorre erro ao salvar o dispositivo', async () => {
+        const error = new Error('Erro ao salvar')
+        const mockDevice = {
+            cycles: [],
+            lastCycleUpdate: null,
+            save: jest.fn().mockRejectedValue(error),
+        }
+        Devices.findOne.mockResolvedValue(mockDevice)
+
+        await devicesController.cycleDevices(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(500)
+        expect(res.json).toHaveBeenCalledWith({
+            error: 'Erro ao iniciar novo ciclo',
+            details: 'Erro ao salvar',
+        })
+    })
+
+    it('deve definir lastCycleUpdate igual ao startDate do novo ciclo', async () => {
+        const mockSave = jest.fn().mockResolvedValue(true)
+        const mockDevice = {
+            cycles: [],
+            lastCycleUpdate: new Date('2022-01-01'),
+            save: mockSave,
+        }
+        Devices.findOne.mockResolvedValue(mockDevice)
+
+        await devicesController.cycleDevices(req, res)
+
+        expect(mockDevice.lastCycleUpdate).toEqual(mockDevice.cycles[0].startDate)
+    })
+
+    it('deve chamar findOne com o filtro correto para usuário não-admin', async () => {
+        const mockSave = jest.fn().mockResolvedValue(true)
+        const mockDevice = {
+            cycles: [],
+            lastCycleUpdate: null,
+            save: mockSave,
+        }
+        Devices.findOne.mockResolvedValue(mockDevice)
+
+        await devicesController.cycleDevices(req, res)
+
+        expect(Devices.findOne).toHaveBeenCalledWith({
+            _id: req.params.deviceId,
+            user: req.user.id,
+        })
+    })
+})
+```

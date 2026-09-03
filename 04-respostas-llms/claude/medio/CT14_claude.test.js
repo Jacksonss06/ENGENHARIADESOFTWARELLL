@@ -1,0 +1,209 @@
+const { validateRegister, validateLogin } = require('./validationMiddleware');
+
+describe('validateRegister', () => {
+  let req, res, next;
+
+  beforeEach(() => {
+    req = { body: {} };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+    };
+    next = jest.fn();
+  });
+
+  test('deve retornar 422 se username não for fornecido', () => {
+    req.body = {
+      email: 'test@test.com',
+      password: 'Senha123',
+      confirmPassword: 'Senha123',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({ msg: 'O nome é obrigatório!' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 422 se email não for fornecido', () => {
+    req.body = {
+      username: 'testuser',
+      password: 'Senha123',
+      confirmPassword: 'Senha123',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({ msg: 'O email é obrigatório!' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 422 se password não for fornecido', () => {
+    req.body = {
+      username: 'testuser',
+      email: 'test@test.com',
+      confirmPassword: 'Senha123',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({ msg: 'A senha é obrigatória!' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 422 quando password e confirmPassword forem diferentes', () => {
+    req.body = {
+      username: 'testuser',
+      email: 'test@test.com',
+      password: 'Senha123',
+      confirmPassword: 'Senha1234',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({ msg: 'As senhas não conferem!' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 422 quando confirmPassword estiver vazio e password preenchido', () => {
+    req.body = {
+      username: 'testuser',
+      email: 'test@test.com',
+      password: 'Senha123',
+      confirmPassword: '',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({ msg: 'As senhas não conferem!' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 422 se a senha não atender ao regex (menos de 8 caracteres)', () => {
+    req.body = {
+      username: 'testuser',
+      email: 'test@test.com',
+      password: 'Ab1',
+      confirmPassword: 'Ab1',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({
+      msg: 'A senha deve conter pelo menos uma letra, um número e ter no mínimo 8 caracteres.',
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 422 se a senha não contiver números', () => {
+    req.body = {
+      username: 'testuser',
+      email: 'test@test.com',
+      password: 'SenhaSemNumero',
+      confirmPassword: 'SenhaSemNumero',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({
+      msg: 'A senha deve conter pelo menos uma letra, um número e ter no mínimo 8 caracteres.',
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 422 se a senha não contiver letras', () => {
+    req.body = {
+      username: 'testuser',
+      email: 'test@test.com',
+      password: '12345678',
+      confirmPassword: '12345678',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({
+      msg: 'A senha deve conter pelo menos uma letra, um número e ter no mínimo 8 caracteres.',
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve chamar next quando todos os dados forem válidos', () => {
+    req.body = {
+      username: 'testuser',
+      email: 'test@test.com',
+      password: 'Senha123',
+      confirmPassword: 'Senha123',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
+  });
+
+  test('deve chamar next quando senha contiver caracteres especiais válidos', () => {
+    req.body = {
+      username: 'testuser',
+      email: 'test@test.com',
+      password: 'Senha@123',
+      confirmPassword: 'Senha@123',
+    };
+
+    validateRegister(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+  });
+});
+
+describe('validateLogin', () => {
+  let req, res, next;
+
+  beforeEach(() => {
+    req = { body: {} };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+    };
+    next = jest.fn();
+  });
+
+  test('deve retornar 422 se email não for fornecido', () => {
+    req.body = { password: 'Senha123' };
+
+    validateLogin(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({ msg: 'O email é obrigatório!' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve retornar 422 se password não for fornecido', () => {
+    req.body = { email: 'test@test.com' };
+
+    validateLogin(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({ msg: 'A senha é obrigatória!' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('deve chamar next quando email e password forem fornecidos', () => {
+    req.body = { email: 'test@test.com', password: 'Senha123' };
+
+    validateLogin(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
+  });
+});

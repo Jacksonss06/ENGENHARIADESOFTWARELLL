@@ -1,0 +1,81 @@
+```javascript
+const authController = require('./authController');
+const User = require('../model/User');
+const bcrypt = require('bcryptjs');
+
+jest.mock('../model/User', () => {
+  const mUserInstance = {
+    save: jest.fn().mockResolvedValue(true)
+  };
+  const mUser = jest.fn(() => mUserInstance);
+  mUser.findOne = jest.fn();
+  return mUser;
+});
+
+jest.mock('bcryptjs', () => ({
+  genSalt: jest.fn(),
+  hash: jest.fn(),
+}));
+
+jest.mock('jsonwebtoken', () => ({
+  sign: jest.fn(),
+}));
+
+jest.mock('crypto', () => ({
+  randomBytes: jest.fn(),
+}));
+
+jest.mock('../config/nodemail', () => jest.fn());
+
+jest.mock('../middlewares/authMiddleware', () => ({
+  blacklist: [],
+}));
+
+describe('authController.register - Username duplicado', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      body: {
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'password123',
+        role: 'user',
+      },
+    };
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+
+    jest.clearAllMocks();
+  });
+
+  it('deve retornar status 422 e interromper o cadastro se o username já existir', async () => {
+    User.findOne.mockResolvedValueOnce({ _id: '1', username: 'testuser' });
+
+    await authController.register(req, res);
+
+    expect(User.findOne).toHaveBeenCalledWith({ username: 'testuser' });
+    expect(User.findOne).toHaveBeenCalledTimes(1);
+    expect(bcrypt.genSalt).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(422);
+    expect(res.json).toHaveBeenCalledWith({ msg: 'Por favor, utilize outro nome de Usuário' });
+  });
+
+  it('deve prosseguir com a verificação de e-mail e cadastro se o username não existir', async () => {
+    User.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    bcrypt.genSalt.mockResolvedValueOnce('salt');
+    bcrypt.hash.mockResolvedValueOnce('hashedPassword');
+
+    await authController.register(req, res);
+
+    expect(User.findOne).toHaveBeenNthCalledWith(1, { username: 'testuser' });
+    expect(User.findOne).toHaveBeenNthCalledWith(2, { email: 'test@example.com' });
+    expect(bcrypt.genSalt).toHaveBeenCalledWith(12);
+    expect(res.status).not.toHaveBeenCalledWith(422);
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+});
+```

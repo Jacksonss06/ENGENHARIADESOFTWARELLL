@@ -1,0 +1,55 @@
+const { getTimerForDevice } = require('./timeManager');
+const Timer = require('./time');
+
+jest.mock('./time');
+
+describe('getTimerForDevice', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should create a new Timer with 3600000ms (1 hour) if a timer for the deviceId does not exist', () => {
+    const deviceId = 'new-device-1';
+    const timer = getTimerForDevice(deviceId);
+
+    expect(Timer).toHaveBeenCalledTimes(1);
+    expect(Timer).toHaveBeenCalledWith(3600 * 1000);
+    expect(timer).toBeDefined();
+  });
+
+  it('should return the existing Timer instance if called multiple times with the same deviceId', () => {
+    const deviceId = 'existing-device-1';
+
+    const timerFirstCall = getTimerForDevice(deviceId);
+    
+    Timer.mockClear();
+    
+    const timerSecondCall = getTimerForDevice(deviceId);
+
+    expect(Timer).not.toHaveBeenCalled();
+    expect(timerFirstCall).toBe(timerSecondCall);
+  });
+
+  it('should create and store different Timer instances for different deviceIds', () => {
+    const deviceId1 = 'device-a';
+    const deviceId2 = 'device-b';
+
+    const timer1 = getTimerForDevice(deviceId1);
+    const timer2 = getTimerForDevice(deviceId2);
+
+    expect(Timer).toHaveBeenCalledTimes(2);
+    expect(timer1).not.toBe(timer2);
+  });
+
+  it('should handle edge cases like empty string, null, undefined, or zero as valid device identifiers', () => {
+    const edgeCaseIds = ['', null, undefined, 0];
+
+    edgeCaseIds.forEach((id) => {
+      const firstCall = getTimerForDevice(id);
+      const secondCall = getTimerForDevice(id);
+      
+      expect(firstCall).toBeDefined();
+      expect(firstCall).toBe(secondCall);
+    });
+  });
+});

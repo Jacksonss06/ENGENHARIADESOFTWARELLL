@@ -1,0 +1,163 @@
+const fastCsv = require('fast-csv');
+const { generateCsv } = require('./csvGenerator');
+
+jest.mock('fast-csv');
+
+describe('generateCsv', () => {
+    let mockRes;
+    let mockCsvStream;
+
+    beforeEach(() => {
+        mockCsvStream = {
+            pipe: jest.fn(),
+            write: jest.fn(),
+            end: jest.fn()
+        };
+        
+        fastCsv.format.mockReturnValue(mockCsvStream);
+
+        mockRes = {
+            setHeader: jest.fn()
+        };
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should set headers and initialize fast-csv correctly', () => {
+        generateCsv(mockRes, 'device-123', [], 'dia');
+
+        expect(fastCsv.format).toHaveBeenCalledWith({ headers: true });
+        expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Disposition', 'attachment; filename=medicoes_device-123_dia.csv');
+        expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'text/csv');
+        expect(mockCsvStream.pipe).toHaveBeenCalledWith(mockRes);
+        expect(mockCsvStream.end).toHaveBeenCalled();
+    });
+
+    it('should write a message when measures array is empty', () => {
+        generateCsv(mockRes, 'device-123', [], 'semana');
+
+        expect(mockCsvStream.write).toHaveBeenCalledWith({ Mensagem: 'Nenhuma medição encontrada para o semana' });
+        expect(mockCsvStream.write).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle non-array measures argument as empty', () => {
+        generateCsv(mockRes, 'device-123', null, 'mes');
+
+        expect(mockCsvStream.write).toHaveBeenCalledWith({ Mensagem: 'Nenhuma medição encontrada para o mes' });
+        expect(mockCsvStream.write).toHaveBeenCalledTimes(1);
+    });
+
+    it('should format and write valid measures correctly', () => {
+        const timestamp1 = new Date('2023-10-01T10:00:00Z');
+        const timestamp2 = new Date('2023-10-01T11:00:00Z');
+        
+        const measures = [
+            {
+                temperature: 25.52,
+                waterTemperature: 22.1,
+                waterFlux: true,
+                containerLevel: 80,
+                conductivity: 1000.5,
+                humidity: 60.2,
+                luminosity: 500.8,
+                ph: 6.5,
+                uv: 2.1,
+                timestamp: timestamp1.toISOString(),
+                onlineTime: '10h',
+                engineStatus: false
+            },
+            {
+                temperature: 15.0,
+                waterTemperature: 18.0,
+                waterFlux: false,
+                containerLevel: 50,
+                conductivity: 800.0,
+                humidity: 45.0,
+                luminosity: 300,
+                ph: 7.0,
+                uv: 1.0,
+                timestamp: timestamp2.toISOString(),
+                onlineTime: '12h',
+                engineStatus: true
+            }
+        ];
+
+        generateCsv(mockRes, 'device-abc', measures, 'dia');
+
+        expect(mockCsvStream.write).toHaveBeenCalledTimes(2);
+        
+        expect(mockCsvStream.write).toHaveBeenNthCalledWith(1, {
+            Temperatura: '25.5 °C',
+            'Temp. Água': '22.1 °C',
+            'Fluxo Água': 'Ativo',
+            'Nível Contêiner': 80,
+            Condutividade: '1000.50 µS/cm',
+            Umidade: '60.2 %',
+            Luminosidade: '501 lux',
+            pH: '6.50',
+            UV: '2.10',
+            'Data/Hora': timestamp1.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
+            'Tempo Online': '10h',
+            Bomba: 'Desligado'
+        });
+
+        expect(mockCsvStream.write).toHaveBeenNthCalledWith(2, {
+            Temperatura: '15.0 °C',
+            'Temp. Água': '18.0 °C',
+            'Fluxo Água': 'Inativo',
+            'Nível Contêiner': 50,
+            Condutividade: '800.00 µS/cm',
+            Umidade: '45.0 %',
+            Luminosidade: '300 lux',
+            pH: '7.00',
+            UV: '1.00',
+            'Data/Hora': timestamp2.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
+            'Tempo Online': '12h',
+            Bomba: 'Ligado'
+        });
+    });
+
+    it('should fallback to N/A for missing or invalid data types', () => {
+        const invalidMeasures = [
+            {
+                temperature: 'muito quente',
+                waterTemperature: null,
+                waterFlux: 'sim',
+                containerLevel: null,
+                conductivity: undefined,
+                humidity: {},
+                luminosity: NaN,
+                ph: 'neutro',
+                uv: false,
+                timestamp: 'data-invalida',
+                onlineTime: null,
+                engineStatus: 'quebrada'
+            },
+            {} 
+        ];
+
+        generateCsv(mockRes, 'device-xyz', invalidMeasures, 'ano');
+
+        expect(mockCsvStream.write).toHaveBeenCalledTimes(2);
+
+        const expectedFallback = {
+            Temperatura: 'N/A',
+            'Temp. Água': 'N/A',
+            'Fluxo Água': 'N/A',
+            'Nível Contêiner': 'N/A',
+            Condutividade: 'N/A',
+            Umidade: 'N/A',
+            Luminosidade: 'N/A',
+            pH: 'N/A',
+            UV: 'N/A',
+            'Data/Hora': 'N/A',
+            'Tempo Online': 'N/A',
+            Bomba: 'N/A'
+        };
+
+        expect(mockCsvStream.write).toHaveBeenNthCalledWith(1, expectedFallback);
+        expect(mockCsvStream.write).toHaveBeenNthCalledWith(2, expectedFallback);
+    });
+});

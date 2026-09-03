@@ -1,0 +1,30 @@
+{
+  "id": "CT24",
+  "dificuldade": "dificil",
+  "llm": "chatgpt",
+  "provedor": "OpenAI",
+  "modelo_solicitado": "gpt-5.6-sol",
+  "modelo_retornado": "gpt-5.6-sol",
+  "data_hora_utc": "2026-09-03T20:31:39.261Z",
+  "http_status": 200,
+  "response_id": "resp_0824dab95d62ca0f006a99d9266ca487d2a0c0ef0355f02acc",
+  "max_output_tokens": 8192,
+  "retry_automatico": false,
+  "parametros": {
+    "openai_reasoning_effort": "medium"
+  },
+  "usage": {
+    "input_tokens": 2126,
+    "input_tokens_details": {
+      "cache_write_tokens": 2123,
+      "cached_tokens": 0
+    },
+    "output_tokens": 1627,
+    "output_tokens_details": {
+      "reasoning_tokens": 516
+    },
+    "total_tokens": 3753
+  },
+  "prompt_sha256": "f6347c46147e00825ab6b3a35d2e44abc3827d98c7fec892230a067412911e23",
+  "unidade_sha256": "257b1d6149cebccbbff4548cfbbec362475c4e677a6564273b05760228f08723"
+}

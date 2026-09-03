@@ -1,0 +1,148 @@
+```javascript
+const graphicsController = require('../controllers/graphicsController');
+const graphicsService = require('../services/graphicsService');
+
+jest.mock('../services/graphicsService');
+
+describe('Graphics Controller', () => {
+    let req;
+    let res;
+
+    beforeEach(() => {
+        req = {
+            params: { id: '123' },
+            query: {}
+        };
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        };
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    describe('getDayMeasures', () => {
+        it('deve retornar as medidas por dia com sucesso', async () => {
+            req.query = { targetDate: '2023-10-01', fields: 'temperatura' };
+            const mockMeasures = [{ value: 25 }];
+            graphicsService.getMeasuresByPeriod.mockResolvedValue(mockMeasures);
+
+            await graphicsController.getDayMeasures(req, res);
+
+            expect(graphicsService.getMeasuresByPeriod).toHaveBeenCalledWith('123', 'dia', '2023-10-01', 'temperatura');
+            expect(res.json).toHaveBeenCalledWith(mockMeasures);
+        });
+
+        it('deve retornar status 400 e a mensagem de erro quando ocorrer uma exceção', async () => {
+            const errorMessage = 'Erro de banco de dados';
+            graphicsService.getMeasuresByPeriod.mockRejectedValue(new Error(errorMessage));
+
+            await graphicsController.getDayMeasures(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ error: errorMessage });
+        });
+    });
+
+    describe('getWeekMeasures', () => {
+        it('deve retornar as medidas por semana com sucesso', async () => {
+            req.query = { targetDate: '2023-10-01', fields: 'umidade' };
+            const mockMeasures = [{ value: 60 }];
+            graphicsService.getMeasuresByPeriod.mockResolvedValue(mockMeasures);
+
+            await graphicsController.getWeekMeasures(req, res);
+
+            expect(graphicsService.getMeasuresByPeriod).toHaveBeenCalledWith('123', 'semana', '2023-10-01', 'umidade');
+            expect(res.json).toHaveBeenCalledWith(mockMeasures);
+        });
+
+        it('deve retornar status 400 e a mensagem de erro quando ocorrer uma exceção', async () => {
+            const errorMessage = 'Erro de banco de dados';
+            graphicsService.getMeasuresByPeriod.mockRejectedValue(new Error(errorMessage));
+
+            await graphicsController.getWeekMeasures(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ error: errorMessage });
+        });
+    });
+
+    describe('getMonthMeasures', () => {
+        it('deve retornar as medidas por mês com sucesso', async () => {
+            req.query = { targetDate: '2023-10-01', fields: 'ph' };
+            const mockMeasures = [{ value: 7 }];
+            graphicsService.getMeasuresByPeriod.mockResolvedValue(mockMeasures);
+
+            await graphicsController.getMonthMeasures(req, res);
+
+            expect(graphicsService.getMeasuresByPeriod).toHaveBeenCalledWith('123', 'mês', '2023-10-01', 'ph');
+            expect(res.json).toHaveBeenCalledWith(mockMeasures);
+        });
+
+        it('deve retornar status 400 e a mensagem de erro quando ocorrer uma exceção', async () => {
+            const errorMessage = 'Erro de banco de dados';
+            graphicsService.getMeasuresByPeriod.mockRejectedValue(new Error(errorMessage));
+
+            await graphicsController.getMonthMeasures(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ error: errorMessage });
+        });
+    });
+
+    describe('getCustomPeriodMeasures', () => {
+        it('deve retornar status 400 quando startDate não for informado', async () => {
+            req.query = { endDate: '2023-10-31', fields: 'temperatura' };
+
+            await graphicsController.getCustomPeriodMeasures(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ error: 'startDate e endDate são obrigatórios' });
+            expect(graphicsService.getMeasuresByCustomPeriod).not.toHaveBeenCalled();
+        });
+
+        it('deve retornar status 400 quando endDate não for informado', async () => {
+            req.query = { startDate: '2023-10-01', fields: 'temperatura' };
+
+            await graphicsController.getCustomPeriodMeasures(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ error: 'startDate e endDate são obrigatórios' });
+            expect(graphicsService.getMeasuresByCustomPeriod).not.toHaveBeenCalled();
+        });
+
+        it('deve retornar status 400 quando ambos startDate e endDate não forem informados', async () => {
+            req.query = { fields: 'temperatura' };
+
+            await graphicsController.getCustomPeriodMeasures(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ error: 'startDate e endDate são obrigatórios' });
+            expect(graphicsService.getMeasuresByCustomPeriod).not.toHaveBeenCalled();
+        });
+
+        it('deve retornar as medidas com sucesso quando as datas forem válidas', async () => {
+            req.query = { startDate: '2023-10-01', endDate: '2023-10-31', fields: 'temperatura' };
+            const mockMeasures = [{ value: 20 }];
+            graphicsService.getMeasuresByCustomPeriod.mockResolvedValue(mockMeasures);
+
+            await graphicsController.getCustomPeriodMeasures(req, res);
+
+            expect(graphicsService.getMeasuresByCustomPeriod).toHaveBeenCalledWith('123', '2023-10-01', '2023-10-31', 'temperatura');
+            expect(res.json).toHaveBeenCalledWith(mockMeasures);
+        });
+
+        it('deve retornar status 400 e uma mensagem genérica de erro quando o serviço lançar uma exceção', async () => {
+            req.query = { startDate: '2023-10-01', endDate: '2023-10-31' };
+            graphicsService.getMeasuresByCustomPeriod.mockRejectedValue(new Error('Internal Service Error'));
+
+            await graphicsController.getCustomPeriodMeasures(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao buscar dados do período' });
+        });
+    });
+});
+```

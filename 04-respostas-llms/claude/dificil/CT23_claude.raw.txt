@@ -1,0 +1,213 @@
+```javascript
+jest.mock('../services/graphicsService')
+
+const graphicsService = require('../services/graphicsService')
+const graphicsController = require('../controllers/graphicsController')
+
+const mockResponse = () => {
+    const res = {}
+    res.status = jest.fn().mockReturnValue(res)
+    res.json = jest.fn().mockReturnValue(res)
+    return res
+}
+
+describe('graphicsController', () => {
+    afterEach(() => {
+        jest.clearAllMocks()
+    })
+
+    describe('getDayMeasures', () => {
+        it('deve retornar medidas com sucesso', async () => {
+            const req = {
+                params: { id: '1' },
+                query: { targetDate: '2023-01-01', fields: 'chuva' }
+            }
+            const res = mockResponse()
+            const mockMeasures = [{ value: 10 }]
+            graphicsService.getMeasuresByPeriod.mockResolvedValue(mockMeasures)
+
+            await graphicsController.getDayMeasures(req, res)
+
+            expect(graphicsService.getMeasuresByPeriod).toHaveBeenCalledWith('1', 'dia', '2023-01-01', 'chuva')
+            expect(res.json).toHaveBeenCalledWith(mockMeasures)
+        })
+
+        it('deve retornar erro 400 quando o service lança exceção', async () => {
+            const req = {
+                params: { id: '1' },
+                query: { targetDate: '2023-01-01', fields: 'chuva' }
+            }
+            const res = mockResponse()
+            graphicsService.getMeasuresByPeriod.mockRejectedValue(new Error('erro interno'))
+
+            await graphicsController.getDayMeasures(req, res)
+
+            expect(res.status).toHaveBeenCalledWith(400)
+            expect(res.json).toHaveBeenCalledWith({ error: 'erro interno' })
+        })
+    })
+
+    describe('getWeekMeasures', () => {
+        it('deve retornar medidas com sucesso', async () => {
+            const req = {
+                params: { id: '2' },
+                query: { targetDate: '2023-01-01', fields: 'nivel' }
+            }
+            const res = mockResponse()
+            const mockMeasures = [{ value: 20 }]
+            graphicsService.getMeasuresByPeriod.mockResolvedValue(mockMeasures)
+
+            await graphicsController.getWeekMeasures(req, res)
+
+            expect(graphicsService.getMeasuresByPeriod).toHaveBeenCalledWith('2', 'semana', '2023-01-01', 'nivel')
+            expect(res.json).toHaveBeenCalledWith(mockMeasures)
+        })
+
+        it('deve retornar erro 400 quando o service lança exceção', async () => {
+            const req = {
+                params: { id: '2' },
+                query: { targetDate: '2023-01-01', fields: 'nivel' }
+            }
+            const res = mockResponse()
+            graphicsService.getMeasuresByPeriod.mockRejectedValue(new Error('erro semana'))
+
+            await graphicsController.getWeekMeasures(req, res)
+
+            expect(res.status).toHaveBeenCalledWith(400)
+            expect(res.json).toHaveBeenCalledWith({ error: 'erro semana' })
+        })
+    })
+
+    describe('getMonthMeasures', () => {
+        it('deve retornar medidas com sucesso', async () => {
+            const req = {
+                params: { id: '3' },
+                query: { targetDate: '2023-01-01', fields: 'vazao' }
+            }
+            const res = mockResponse()
+            const mockMeasures = [{ value: 30 }]
+            graphicsService.getMeasuresByPeriod.mockResolvedValue(mockMeasures)
+
+            await graphicsController.getMonthMeasures(req, res)
+
+            expect(graphicsService.getMeasuresByPeriod).toHaveBeenCalledWith('3', 'mês', '2023-01-01', 'vazao')
+            expect(res.json).toHaveBeenCalledWith(mockMeasures)
+        })
+
+        it('deve retornar erro 400 quando o service lança exceção', async () => {
+            const req = {
+                params: { id: '3' },
+                query: { targetDate: '2023-01-01', fields: 'vazao' }
+            }
+            const res = mockResponse()
+            graphicsService.getMeasuresByPeriod.mockRejectedValue(new Error('erro mes'))
+
+            await graphicsController.getMonthMeasures(req, res)
+
+            expect(res.status).toHaveBeenCalledWith(400)
+            expect(res.json).toHaveBeenCalledWith({ error: 'erro mes' })
+        })
+    })
+
+    describe('getCustomPeriodMeasures', () => {
+        it('deve retornar erro 400 quando startDate não é informado', async () => {
+            const req = {
+                params: { id: '4' },
+                query: { endDate: '2023-01-31', fields: 'chuva' }
+            }
+            const res = mockResponse()
+
+            await graphicsController.getCustomPeriodMeasures(req, res)
+
+            expect(res.status).toHaveBeenCalledWith(400)
+            expect(res.json).toHaveBeenCalledWith({ error: 'startDate e endDate são obrigatórios' })
+            expect(graphicsService.getMeasuresByCustomPeriod).not.toHaveBeenCalled()
+        })
+
+        it('deve retornar erro 400 quando endDate não é informado', async () => {
+            const req = {
+                params: { id: '4' },
+                query: { startDate: '2023-01-01', fields: 'chuva' }
+            }
+            const res = mockResponse()
+
+            await graphicsController.getCustomPeriodMeasures(req, res)
+
+            expect(res.status).toHaveBeenCalledWith(400)
+            expect(res.json).toHaveBeenCalledWith({ error: 'startDate e endDate são obrigatórios' })
+            expect(graphicsService.getMeasuresByCustomPeriod).not.toHaveBeenCalled()
+        })
+
+        it('deve retornar erro 400 quando startDate e endDate não são informados', async () => {
+            const req = {
+                params: { id: '4' },
+                query: { fields: 'chuva' }
+            }
+            const res = mockResponse()
+
+            await graphicsController.getCustomPeriodMeasures(req, res)
+
+            expect(res.status).toHaveBeenCalledWith(400)
+            expect(res.json).toHaveBeenCalledWith({ error: 'startDate e endDate são obrigatórios' })
+            expect(graphicsService.getMeasuresByCustomPeriod).not.toHaveBeenCalled()
+        })
+
+        it('deve retornar medidas com sucesso quando startDate e endDate são informados', async () => {
+            const req = {
+                params: { id: '4' },
+                query: { startDate: '2023-01-01', endDate: '2023-01-31', fields: 'chuva' }
+            }
+            const res = mockResponse()
+            const mockMeasures = [{ value: 40 }]
+            graphicsService.getMeasuresByCustomPeriod.mockResolvedValue(mockMeasures)
+
+            await graphicsController.getCustomPeriodMeasures(req, res)
+
+            expect(graphicsService.getMeasuresByCustomPeriod).toHaveBeenCalledWith('4', '2023-01-01', '2023-01-31', 'chuva')
+            expect(res.json).toHaveBeenCalledWith(mockMeasures)
+        })
+
+        it('deve retornar erro 400 genérico quando o service lança exceção', async () => {
+            const req = {
+                params: { id: '4' },
+                query: { startDate: '2023-01-01', endDate: '2023-01-31', fields: 'chuva' }
+            }
+            const res = mockResponse()
+            graphicsService.getMeasuresByCustomPeriod.mockRejectedValue(new Error('erro interno detalhado'))
+
+            await graphicsController.getCustomPeriodMeasures(req, res)
+
+            expect(res.status).toHaveBeenCalledWith(400)
+            expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao buscar dados do período' })
+        })
+
+        it('deve retornar erro 400 quando startDate é string vazia', async () => {
+            const req = {
+                params: { id: '4' },
+                query: { startDate: '', endDate: '2023-01-31', fields: 'chuva' }
+            }
+            const res = mockResponse()
+
+            await graphicsController.getCustomPeriodMeasures(req, res)
+
+            expect(res.status).toHaveBeenCalledWith(400)
+            expect(res.json).toHaveBeenCalledWith({ error: 'startDate e endDate são obrigatórios' })
+            expect(graphicsService.getMeasuresByCustomPeriod).not.toHaveBeenCalled()
+        })
+
+        it('deve retornar erro 400 quando endDate é string vazia', async () => {
+            const req = {
+                params: { id: '4' },
+                query: { startDate: '2023-01-01', endDate: '', fields: 'chuva' }
+            }
+            const res = mockResponse()
+
+            await graphicsController.getCustomPeriodMeasures(req, res)
+
+            expect(res.status).toHaveBeenCalledWith(400)
+            expect(res.json).toHaveBeenCalledWith({ error: 'startDate e endDate são obrigatórios' })
+            expect(graphicsService.getMeasuresByCustomPeriod).not.toHaveBeenCalled()
+        })
+    })
+})
+```

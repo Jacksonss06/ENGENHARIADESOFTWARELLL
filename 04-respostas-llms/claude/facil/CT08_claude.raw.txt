@@ -1,0 +1,78 @@
+```javascript
+const { getTimeRange } = require('../src/utils/timeRange')
+
+describe('getTimeRange - semana', () => {
+    test('deve retornar o intervalo correto quando a data alvo é uma quarta-feira', () => {
+        const targetDate = '2024-06-12T10:00:00Z' // quarta-feira
+        const { start, end } = getTimeRange('semana', targetDate)
+
+        expect(start.toISOString()).toBe('2024-06-10T00:00:00.000Z') // segunda-feira
+        expect(end.toISOString()).toBe('2024-06-16T23:59:59.000Z') // domingo
+    })
+
+    test('deve retornar o intervalo correto quando a data alvo é uma segunda-feira', () => {
+        const targetDate = '2024-06-10T00:00:00Z'
+        const { start, end } = getTimeRange('semana', targetDate)
+
+        expect(start.toISOString()).toBe('2024-06-10T00:00:00.000Z')
+        expect(end.toISOString()).toBe('2024-06-16T23:59:59.000Z')
+    })
+
+    test('deve retornar o intervalo correto quando a data alvo é um domingo', () => {
+        const targetDate = '2024-06-16T23:59:59Z'
+        const { start, end } = getTimeRange('semana', targetDate)
+
+        expect(start.toISOString()).toBe('2024-06-10T00:00:00.000Z')
+        expect(end.toISOString()).toBe('2024-06-16T23:59:59.000Z')
+    })
+
+    test('deve retornar o intervalo correto ao cruzar o limite de mês', () => {
+        const targetDate = '2024-07-01T12:00:00Z' // segunda-feira
+        const { start, end } = getTimeRange('semana', targetDate)
+
+        expect(start.toISOString()).toBe('2024-07-01T00:00:00.000Z')
+        expect(end.toISOString()).toBe('2024-07-07T23:59:59.000Z')
+    })
+
+    test('deve retornar o intervalo correto ao cruzar o limite de ano', () => {
+        const targetDate = '2024-12-31T12:00:00Z' // terça-feira
+        const { start, end } = getTimeRange('semana', targetDate)
+
+        expect(start.toISOString()).toBe('2024-12-30T00:00:00.000Z')
+        expect(end.toISOString()).toBe('2025-01-05T23:59:59.000Z')
+    })
+
+    test('deve utilizar a data atual quando targetDate não é informado', () => {
+        const { start, end } = getTimeRange('semana')
+
+        expect(start).toBeInstanceOf(Date)
+        expect(end).toBeInstanceOf(Date)
+        expect(start.getUTCHours()).toBe(0)
+        expect(start.getUTCMinutes()).toBe(0)
+        expect(start.getUTCSeconds()).toBe(0)
+        expect(end.getUTCHours()).toBe(23)
+        expect(end.getUTCMinutes()).toBe(59)
+        expect(end.getUTCSeconds()).toBe(59)
+        expect(start.getUTCDay()).toBe(1) // segunda-feira
+        expect(end.getUTCDay()).toBe(0) // domingo
+    })
+
+    test('deve lançar erro quando a data informada é inválida', () => {
+        expect(() => getTimeRange('semana', 'data-invalida')).toThrow('Data inválida')
+    })
+
+    test('deve lançar erro quando o período é inválido', () => {
+        expect(() => getTimeRange('ano', '2024-06-12T10:00:00Z')).toThrow('Período inválido')
+    })
+
+    test('deve retornar um intervalo de exatamente 7 dias', () => {
+        const targetDate = '2024-06-12T10:00:00Z'
+        const { start, end } = getTimeRange('semana', targetDate)
+
+        const diffInMs = end.getTime() - start.getTime()
+        const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+
+        expect(diffInDays).toBeCloseTo(6.999988425925926, 5)
+    })
+})
+```

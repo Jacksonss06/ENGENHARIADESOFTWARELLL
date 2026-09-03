@@ -1,0 +1,128 @@
+```javascript
+const {
+  calculateDaysPassed,
+  canAdvanceCycle,
+  advanceCycle
+} = require('./cycleUtils')
+
+describe('calculateDaysPassed', () => {
+  it('deve retornar 0 quando a data de início é hoje', () => {
+    const today = new Date()
+    expect(calculateDaysPassed(today)).toBe(0)
+  })
+
+  it('deve retornar o número correto de dias passados para uma data no passado', () => {
+    const date = new Date()
+    date.setDate(date.getDate() - 10)
+    expect(calculateDaysPassed(date)).toBe(10)
+  })
+
+  it('deve retornar valor negativo quando a data de início está no futuro', () => {
+    const date = new Date()
+    date.setDate(date.getDate() + 5)
+    expect(calculateDaysPassed(date)).toBe(-5)
+  })
+
+  it('deve aceitar string de data ISO válida', () => {
+    const date = new Date()
+    date.setDate(date.getDate() - 3)
+    const isoString = date.toISOString()
+    expect(calculateDaysPassed(isoString)).toBe(3)
+  })
+})
+
+describe('canAdvanceCycle', () => {
+  it('deve retornar true quando dias passados são iguais ao mínimo padrão (15)', () => {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - 15)
+    const cycle = { startDate }
+    expect(canAdvanceCycle(cycle)).toBe(true)
+  })
+
+  it('deve retornar true quando dias passados são maiores que o mínimo padrão', () => {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - 20)
+    const cycle = { startDate }
+    expect(canAdvanceCycle(cycle)).toBe(true)
+  })
+
+  it('deve retornar false quando dias passados são menores que o mínimo padrão', () => {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - 5)
+    const cycle = { startDate }
+    expect(canAdvanceCycle(cycle)).toBe(false)
+  })
+
+  it('deve respeitar o parâmetro minDays customizado', () => {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - 5)
+    const cycle = { startDate }
+    expect(canAdvanceCycle(cycle, 5)).toBe(true)
+    expect(canAdvanceCycle(cycle, 6)).toBe(false)
+  })
+
+  it('deve retornar false quando startDate é hoje e minDays é maior que 0', () => {
+    const cycle = { startDate: new Date() }
+    expect(canAdvanceCycle(cycle, 1)).toBe(false)
+  })
+})
+
+describe('advanceCycle', () => {
+  it('deve incrementar o valor de currentCycle em 1', () => {
+    const cycle = { currentCycle: 1, startDate: new Date('2023-01-01'), daysPassed: 20, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result.currentCycle).toBe(2)
+  })
+
+  it('deve atualizar startDate para a data atual', () => {
+    const before = new Date()
+    const cycle = { currentCycle: 1, startDate: new Date('2023-01-01'), daysPassed: 20, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    const after = new Date()
+
+    expect(result.startDate).toBeInstanceOf(Date)
+    expect(result.startDate.getTime()).toBeGreaterThanOrEqual(before.getTime())
+    expect(result.startDate.getTime()).toBeLessThanOrEqual(after.getTime())
+  })
+
+  it('deve resetar daysPassed para 0', () => {
+    const cycle = { currentCycle: 1, startDate: new Date('2023-01-01'), daysPassed: 20, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result.daysPassed).toBe(0)
+  })
+
+  it('deve definir manualAdvance como true', () => {
+    const cycle = { currentCycle: 1, startDate: new Date('2023-01-01'), daysPassed: 20, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result.manualAdvance).toBe(true)
+  })
+
+  it('deve retornar o mesmo objeto (mutação in place)', () => {
+    const cycle = { currentCycle: 1, startDate: new Date('2023-01-01'), daysPassed: 20, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result).toBe(cycle)
+  })
+
+  it('deve funcionar corretamente ao ser chamado múltiplas vezes seguidas', () => {
+    const cycle = { currentCycle: 0, startDate: new Date('2023-01-01'), daysPassed: 20, manualAdvance: false }
+    advanceCycle(cycle)
+    advanceCycle(cycle)
+    advanceCycle(cycle)
+    expect(cycle.currentCycle).toBe(3)
+    expect(cycle.daysPassed).toBe(0)
+    expect(cycle.manualAdvance).toBe(true)
+  })
+
+  it('deve lidar com currentCycle negativo incrementando corretamente', () => {
+    const cycle = { currentCycle: -1, startDate: new Date('2023-01-01'), daysPassed: 5, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result.currentCycle).toBe(0)
+  })
+
+  it('deve lidar com currentCycle indefinido tornando-se NaN', () => {
+    const cycle = { startDate: new Date('2023-01-01') }
+    const result = advanceCycle(cycle)
+    expect(result.currentCycle).toBeNaN()
+  })
+})
+```

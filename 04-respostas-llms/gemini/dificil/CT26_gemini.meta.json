@@ -1,0 +1,31 @@
+{
+  "id": "CT26",
+  "dificuldade": "dificil",
+  "llm": "gemini",
+  "provedor": "Google",
+  "modelo_solicitado": "gemini-3.1-pro-preview",
+  "modelo_retornado": "gemini-3.1-pro-preview",
+  "data_hora_utc": "2026-09-03T22:36:50.201Z",
+  "http_status": 200,
+  "response_id": "ffaZavm_EIS-qtsPzLDq8AM",
+  "max_output_tokens": 8192,
+  "retry_automatico": false,
+  "parametros": {
+    "openai_reasoning_effort": null
+  },
+  "usage": {
+    "promptTokenCount": 2439,
+    "candidatesTokenCount": 649,
+    "totalTokenCount": 5500,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 2439
+      }
+    ],
+    "thoughtsTokenCount": 2412,
+    "serviceTier": "standard"
+  },
+  "prompt_sha256": "05272d04315568571074a43e9018a720be0fd287f7d388506ab04f5c05af5661",
+  "unidade_sha256": "15c2d0b9bfc36b5e7b3aad7cbb65af615a6e0eb5bb2fd495c57c9df8ec8333c4"
+}

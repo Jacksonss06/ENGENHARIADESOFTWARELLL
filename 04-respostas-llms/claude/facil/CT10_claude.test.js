@@ -1,0 +1,99 @@
+const { getTimeRange } = require('../src/utils/timeRange');
+
+describe('getTimeRange', () => {
+  describe('casos positivos', () => {
+    test('deve retornar intervalo correto para período "dia"', () => {
+      const result = getTimeRange('dia', '2024-03-15T10:00:00Z');
+      expect(result.start).toEqual(new Date(Date.UTC(2024, 2, 15, 0, 0, 0)));
+      expect(result.end).toEqual(new Date(Date.UTC(2024, 2, 15, 23, 59, 59)));
+    });
+
+    test('deve retornar intervalo correto para período "semana" (data em uma quarta-feira)', () => {
+      const result = getTimeRange('semana', '2024-03-13T10:00:00Z');
+      expect(result.start).toEqual(new Date(Date.UTC(2024, 2, 11, 0, 0, 0)));
+      expect(result.end).toEqual(new Date(Date.UTC(2024, 2, 17, 23, 59, 59)));
+    });
+
+    test('deve retornar intervalo correto para período "semana" quando a data é um domingo', () => {
+      const result = getTimeRange('semana', '2024-03-17T10:00:00Z');
+      expect(result.start).toEqual(new Date(Date.UTC(2024, 2, 11, 0, 0, 0)));
+      expect(result.end).toEqual(new Date(Date.UTC(2024, 2, 17, 23, 59, 59)));
+    });
+
+    test('deve retornar intervalo correto para período "mês"', () => {
+      const result = getTimeRange('mês', '2024-02-10T10:00:00Z');
+      expect(result.start).toEqual(new Date(Date.UTC(2024, 1, 1, 0, 0, 0)));
+      expect(result.end).toEqual(new Date(Date.UTC(2024, 1, 29, 23, 59, 59)));
+    });
+
+    test('deve utilizar a data atual quando targetDate não é fornecido', () => {
+      const result = getTimeRange('dia');
+      const now = new Date();
+      expect(result.start.getUTCFullYear()).toBe(now.getUTCFullYear());
+      expect(result.start.getUTCMonth()).toBe(now.getUTCMonth());
+      expect(result.start.getUTCDate()).toBe(now.getUTCDate());
+    });
+  });
+
+  describe('casos negativos', () => {
+    test('deve lançar erro para período inválido', () => {
+      expect(() => getTimeRange('ano', '2024-03-15T10:00:00Z')).toThrow('Período inválido');
+    });
+
+    test('deve lançar erro para período vazio', () => {
+      expect(() => getTimeRange('', '2024-03-15T10:00:00Z')).toThrow('Período inválido');
+    });
+
+    test('deve lançar erro para período undefined', () => {
+      expect(() => getTimeRange(undefined, '2024-03-15T10:00:00Z')).toThrow('Período inválido');
+    });
+
+    test('deve lançar erro para período null', () => {
+      expect(() => getTimeRange(null, '2024-03-15T10:00:00Z')).toThrow('Período inválido');
+    });
+
+    test('deve lançar erro para data inválida', () => {
+      expect(() => getTimeRange('dia', 'data-invalida')).toThrow('Data inválida');
+    });
+
+    test('deve lançar erro para data inválida mesmo com período válido "semana"', () => {
+      expect(() => getTimeRange('semana', 'not-a-date')).toThrow('Data inválida');
+    });
+
+    test('deve priorizar erro de data inválida sobre período inválido', () => {
+      expect(() => getTimeRange('periodo-invalido', 'data-invalida')).toThrow('Data inválida');
+    });
+  });
+
+  describe('casos de borda', () => {
+    test('deve tratar corretamente o mês de fevereiro em ano bissexto', () => {
+      const result = getTimeRange('mês', '2024-02-15T00:00:00Z');
+      expect(result.end.getUTCDate()).toBe(29);
+    });
+
+    test('deve tratar corretamente o mês de fevereiro em ano não bissexto', () => {
+      const result = getTimeRange('mês', '2023-02-15T00:00:00Z');
+      expect(result.end.getUTCDate()).toBe(28);
+    });
+
+    test('deve tratar corretamente o mês de dezembro (virada de ano)', () => {
+      const result = getTimeRange('mês', '2024-12-15T00:00:00Z');
+      expect(result.start).toEqual(new Date(Date.UTC(2024, 11, 1, 0, 0, 0)));
+      expect(result.end).toEqual(new Date(Date.UTC(2024, 11, 31, 23, 59, 59)));
+    });
+
+    test('deve tratar corretamente semana que cruza virada de mês', () => {
+      const result = getTimeRange('semana', '2024-03-01T00:00:00Z');
+      expect(result.start).toEqual(new Date(Date.UTC(2024, 1, 26, 0, 0, 0)));
+      expect(result.end).toEqual(new Date(Date.UTC(2024, 2, 3, 23, 59, 59)));
+    });
+
+    test('deve ser case-sensitive para o parâmetro period', () => {
+      expect(() => getTimeRange('DIA', '2024-03-15T10:00:00Z')).toThrow('Período inválido');
+    });
+
+    test('deve lançar erro para número como período', () => {
+      expect(() => getTimeRange(123, '2024-03-15T10:00:00Z')).toThrow('Período inválido');
+    });
+  });
+});

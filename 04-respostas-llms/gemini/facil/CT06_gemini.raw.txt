@@ -1,0 +1,152 @@
+```javascript
+const Timer = require('../../src/utils/time');
+
+describe('Timer', () => {
+    let timer;
+    let consoleSpy;
+
+    beforeEach(() => {
+        timer = new Timer();
+        consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        consoleSpy.mockRestore();
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    });
+
+    describe('padTime (Alvo Experimental)', () => {
+        it('deve preencher com zero à esquerda quando o valor for menor que 10', () => {
+            expect(timer.padTime(0)).toBe('00');
+            expect(timer.padTime(1)).toBe('01');
+            expect(timer.padTime(5)).toBe('05');
+            expect(timer.padTime(9)).toBe('09');
+        });
+
+        it('não deve preencher com zero à esquerda quando o valor for 10 ou maior', () => {
+            expect(timer.padTime(10)).toBe(10);
+            expect(timer.padTime(15)).toBe(15);
+            expect(timer.padTime(59)).toBe(59);
+            expect(timer.padTime(100)).toBe(100);
+        });
+
+        it('deve tratar valores negativos corretamente (caso de borda)', () => {
+            expect(timer.padTime(-1)).toBe('0-1');
+            expect(timer.padTime(-9)).toBe('0-9');
+        });
+    });
+
+    describe('formatTime', () => {
+        it('deve formatar 0 segundos como 00:00:00', () => {
+            expect(timer.formatTime(0)).toBe('00:00:00');
+        });
+
+        it('deve formatar corretamente horas, minutos e segundos', () => {
+            // 3600 (1h) + 60 (1m) + 5 = 3665s
+            expect(timer.formatTime(3665)).toBe('01:01:05');
+            
+            // 36000 (10h) + 600 (10m) + 10 = 36610s
+            expect(timer.formatTime(36610)).toBe('10:10:10');
+            
+            // 86399 (23h 59m 59s)
+            expect(timer.formatTime(86399)).toBe('23:59:59');
+        });
+    });
+
+    describe('start, stop e getElapsedTime', () => {
+        it('deve iniciar o cronômetro', () => {
+            timer.start();
+            expect(timer.timerActive).toBe(true);
+            expect(timer.startTime).toBeInstanceOf(Date);
+            expect(consoleSpy).toHaveBeenCalledWith('Cronômetro iniciado.');
+        });
+
+        it('não deve reiniciar o cronômetro se ele já estiver ativo', () => {
+            timer.start();
+            const initialStartTime = timer.startTime;
+            
+            jest.advanceTimersByTime(1000);
+            timer.start(); // Tenta iniciar novamente
+            
+            expect(timer.startTime).toBe(initialStartTime); // startTime deve permanecer o mesmo
+        });
+
+        it('deve calcular o tempo decorrido corretamente enquanto o cronômetro estiver ativo', () => {
+            timer.start();
+            jest.advanceTimersByTime(3000);
+            
+            expect(timer.getElapsedTime()).toBe('00:00:03');
+            
+            jest.advanceTimersByTime(2000);
+            expect(timer.getElapsedTime()).toBe('00:00:05');
+        });
+
+        it('deve retornar 00:00:00 ao consultar tempo decorrido de cronômetro inativo', () => {
+            expect(timer.getElapsedTime()).toBe('00:00:00');
+        });
+
+        it('deve parar o cronômetro e resetar o tempo para 00:00:00', () => {
+            timer.start();
+            jest.advanceTimersByTime(4000);
+            
+            const result = timer.stop();
+            
+            expect(timer.timerActive).toBe(false);
+            expect(timer.elapsedTime).toBe(0);
+            expect(result).toBe('00:00:00');
+            expect(consoleSpy).toHaveBeenCalledWith('Cronômetro parado. Tempo ativo: 00:00:04');
+        });
+
+        it('deve apenas retornar o formato de elapsedTime quando tentar parar um cronômetro inativo', () => {
+            const result = timer.stop();
+            expect(result).toBe('00:00:00');
+            expect(consoleSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('resetInactiveTime', () => {
+        it('deve acionar o callback após o fim do timeout padrão', () => {
+            const callback = jest.fn();
+            timer.resetInactiveTime(callback);
+
+            expect(callback).not.toHaveBeenCalled();
+
+            jest.advanceTimersByTime(5000); // Timeout default = 5000ms
+
+            expect(callback).toHaveBeenCalledTimes(1);
+            expect(consoleSpy).toHaveBeenCalledWith('ESP32 inativa. Parando o cronômetro...');
+        });
+
+        it('deve limpar o timeout anterior se acionado múltiplas vezes e não chamar callback prematuramente', () => {
+            const callback = jest.fn();
+            timer.resetInactiveTime(callback);
+
+            jest.advanceTimersByTime(3000);
+            
+            // Reseta antes de atingir 5000
+            timer.resetInactiveTime(callback);
+            
+            jest.advanceTimersByTime(3000);
+            // 6000ms totais se passaram, mas apenas 3000ms do último reset
+            expect(callback).not.toHaveBeenCalled();
+
+            jest.advanceTimersByTime(2000); // Completa 5000ms do segundo reset
+            expect(callback).toHaveBeenCalledTimes(1);
+        });
+
+        it('deve respeitar um timeout customizado', () => {
+            const customTimer = new Timer(10000);
+            const callback = jest.fn();
+            customTimer.resetInactiveTime(callback);
+
+            jest.advanceTimersByTime(5000);
+            expect(callback).not.toHaveBeenCalled();
+
+            jest.advanceTimersByTime(5000);
+            expect(callback).toHaveBeenCalledTimes(1);
+        });
+    });
+});
+```

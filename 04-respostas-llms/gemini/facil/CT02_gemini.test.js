@@ -1,0 +1,81 @@
+const {
+  calculateDaysPassed,
+  canAdvanceCycle,
+  advanceCycle
+} = require('./cycleUtils');
+
+describe('cycleUtils', () => {
+  const fixedSystemTime = new Date(2023, 9, 15, 12, 0, 0); 
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(fixedSystemTime);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  describe('calculateDaysPassed', () => {
+    it('deve retornar 0 quando a data de início for o mesmo dia (hoje)', () => {
+      const startDate = new Date(2023, 9, 15, 8, 0, 0);
+      expect(calculateDaysPassed(startDate)).toBe(0);
+    });
+
+    it('deve retornar a quantidade correta de dias passados para uma data no passado', () => {
+      const startDate = new Date(2023, 9, 10, 15, 0, 0); 
+      expect(calculateDaysPassed(startDate)).toBe(5);
+    });
+
+    it('deve retornar um número negativo caso a data de início esteja no futuro', () => {
+      const startDate = new Date(2023, 9, 20, 10, 0, 0); 
+      expect(calculateDaysPassed(startDate)).toBe(-5);
+    });
+  });
+
+  describe('canAdvanceCycle', () => {
+    it('deve retornar true quando a quantidade de dias passados for exatamente igual ao mínimo padrão (15)', () => {
+      const cycle = { startDate: new Date(2023, 8, 30, 10, 0, 0) }; 
+      expect(canAdvanceCycle(cycle)).toBe(true);
+    });
+
+    it('deve retornar true quando a quantidade de dias passados exceder o mínimo padrão (15)', () => {
+      const cycle = { startDate: new Date(2023, 8, 20, 10, 0, 0) }; 
+      expect(canAdvanceCycle(cycle)).toBe(true);
+    });
+
+    it('deve retornar false quando a quantidade de dias passados for menor que o mínimo padrão (15)', () => {
+      const cycle = { startDate: new Date(2023, 9, 5, 10, 0, 0) }; 
+      expect(canAdvanceCycle(cycle)).toBe(false);
+    });
+
+    it('deve retornar true quando um valor mínimo customizado for atingido exatamente', () => {
+      const cycle = { startDate: new Date(2023, 9, 5, 10, 0, 0) }; 
+      expect(canAdvanceCycle(cycle, 10)).toBe(true);
+    });
+
+    it('deve retornar false quando um valor mínimo customizado não for atingido', () => {
+      const cycle = { startDate: new Date(2023, 9, 6, 10, 0, 0) }; 
+      expect(canAdvanceCycle(cycle, 10)).toBe(false);
+    });
+  });
+
+  describe('advanceCycle', () => {
+    it('deve atualizar corretamente as propriedades do ciclo para o próximo', () => {
+      const cycle = {
+        currentCycle: 2,
+        startDate: new Date(2023, 8, 1, 0, 0, 0),
+        daysPassed: 44,
+        manualAdvance: false
+      };
+
+      const result = advanceCycle(cycle);
+
+      expect(result).toBe(cycle); 
+      expect(result.currentCycle).toBe(3);
+      expect(result.startDate).toEqual(fixedSystemTime);
+      expect(result.daysPassed).toBe(0);
+      expect(result.manualAdvance).toBe(true);
+    });
+  });
+});

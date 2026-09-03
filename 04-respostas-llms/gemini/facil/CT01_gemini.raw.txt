@@ -1,0 +1,97 @@
+```javascript
+const { calculateDaysPassed, canAdvanceCycle, advanceCycle } = require('./cycleUtils');
+
+describe('cycleUtils', () => {
+  const mockSystemTime = new Date(2023, 0, 20, 12, 0, 0); // Jan 20, 2023, 12:00:00
+
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(mockSystemTime);
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
+  describe('calculateDaysPassed', () => {
+    it('should correctly calculate the number of days passed since a past date object', () => {
+      const pastDate = new Date(2023, 0, 10, 9, 0, 0); // Jan 10, 2023
+      expect(calculateDaysPassed(pastDate)).toBe(10);
+    });
+
+    it('should correctly calculate the number of days passed using a date string', () => {
+      const pastDateString = new Date(2023, 0, 5, 15, 0, 0).toISOString(); // Jan 5, 2023
+      expect(calculateDaysPassed(pastDateString)).toBe(15);
+    });
+
+    it('should return 0 when the provided date is today (different hours)', () => {
+      const todayDate = new Date(2023, 0, 20, 8, 30, 0); // Jan 20, 2023
+      expect(calculateDaysPassed(todayDate)).toBe(0);
+    });
+
+    it('should return a negative number for a date in the future', () => {
+      const futureDate = new Date(2023, 0, 25, 12, 0, 0); // Jan 25, 2023
+      expect(calculateDaysPassed(futureDate)).toBe(-5);
+    });
+  });
+
+  describe('canAdvanceCycle', () => {
+    it('should return true if days passed is equal to the default minDays (15)', () => {
+      const cycle = { startDate: new Date(2023, 0, 5, 12, 0, 0) }; // 15 days ago
+      expect(canAdvanceCycle(cycle)).toBe(true);
+    });
+
+    it('should return true if days passed is greater than the default minDays (15)', () => {
+      const cycle = { startDate: new Date(2023, 0, 1, 12, 0, 0) }; // 19 days ago
+      expect(canAdvanceCycle(cycle)).toBe(true);
+    });
+
+    it('should return false if days passed is less than the default minDays (15)', () => {
+      const cycle = { startDate: new Date(2023, 0, 10, 12, 0, 0) }; // 10 days ago
+      expect(canAdvanceCycle(cycle)).toBe(false);
+    });
+
+    it('should return true if days passed meets a custom minDays threshold', () => {
+      const cycle = { startDate: new Date(2023, 0, 10, 12, 0, 0) }; // 10 days ago
+      expect(canAdvanceCycle(cycle, 10)).toBe(true);
+    });
+
+    it('should return false if days passed is less than a custom minDays threshold', () => {
+      const cycle = { startDate: new Date(2023, 0, 10, 12, 0, 0) }; // 10 days ago
+      expect(canAdvanceCycle(cycle, 20)).toBe(false);
+    });
+  });
+
+  describe('advanceCycle', () => {
+    it('should correctly advance the cycle and update its properties', () => {
+      const cycle = {
+        currentCycle: 3,
+        startDate: new Date(2022, 11, 1),
+        daysPassed: 50,
+        manualAdvance: false
+      };
+
+      const advancedCycle = advanceCycle(cycle);
+
+      expect(advancedCycle.currentCycle).toBe(4);
+      expect(advancedCycle.startDate).toEqual(mockSystemTime);
+      expect(advancedCycle.daysPassed).toBe(0);
+      expect(advancedCycle.manualAdvance).toBe(true);
+      expect(advancedCycle).toBe(cycle);
+    });
+
+    it('should handle cycles with missing properties gracefully', () => {
+      const cycle = {
+        currentCycle: 0
+      };
+
+      const advancedCycle = advanceCycle(cycle);
+
+      expect(advancedCycle.currentCycle).toBe(1);
+      expect(advancedCycle.startDate).toEqual(mockSystemTime);
+      expect(advancedCycle.daysPassed).toBe(0);
+      expect(advancedCycle.manualAdvance).toBe(true);
+    });
+  });
+});
+```

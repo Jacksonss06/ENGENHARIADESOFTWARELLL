@@ -1,0 +1,245 @@
+jest.mock('../model/Devices', () => ({
+  aggregate: jest.fn()
+}))
+
+jest.mock('../utils/timeRange', () => ({
+  getTimeRange: jest.fn()
+}))
+
+jest.mock('mongoose', () => {
+  const actualMongoose = jest.requireActual('mongoose')
+  return {
+    ...actualMongoose,
+    Types: {
+      ObjectId: jest.fn().mockImplementation((id) => id)
+    }
+  }
+})
+
+const Measure = require('../model/Devices')
+const mongoose = require('mongoose')
+const { getTimeRange } = require('../utils/timeRange')
+const { getMeasuresByPeriod, getMeasuresByCustomPeriod } = require('../services/graphicsService')
+
+describe('graphicsService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    console.error.mockRestore()
+  })
+
+  describe('getMeasuresByPeriod', () => {
+    const deviceId = '60d5ec49f1a2c8b1f8e4e1a1'
+    const period = 'day'
+    const targetDate = '2023-01-01'
+
+    it('deve montar o pipeline corretamente com campos padrão quando fields não é fornecido', async () => {
+      const start = new Date('2023-01-01T00:00:00Z')
+      const end = new Date('2023-01-01T23:59:59Z')
+      getTimeRange.mockReturnValue({ start, end })
+      Measure.aggregate.mockResolvedValue([{ temperature: 25, humidity: 60, timestamp: end }])
+
+      const result = await getMeasuresByPeriod(deviceId, period, targetDate, null)
+
+      expect(getTimeRange).toHaveBeenCalledWith(period, targetDate)
+      expect(mongoose.Types.ObjectId).toHaveBeenCalledWith(deviceId)
+      expect(Measure.aggregate).toHaveBeenCalledTimes(1)
+
+      const pipeline = Measure.aggregate.mock.calls[0][0]
+      expect(pipeline[0]).toEqual({ $match: { _id: deviceId } })
+      expect(pipeline[1]).toEqual({ $unwind: "$measures" })
+      expect(pipeline[2]).toEqual({ $match: { "measures.timestamp": { $gte: start, $lte: end } } })
+      expect(pipeline[3].$project).toMatchObject({
+        _id: 0,
+        temperature: "$measures.temperature",
+        humidity: "$measures.humidity",
+        ph: "$measures.ph",
+        uv: "$measures.uv",
+        conductivity: "$measures.conductivity",
+        timestamp: "$measures.timestamp"
+      })
+      expect(pipeline[4]).toEqual({ $sort: { timestamp: -1 } })
+
+      expect(result).toEqual([{ temperature: 25, humidity: 60, timestamp: end }])
+    })
+
+    it('deve montar o pipeline corretamente com campos customizados', async () => {
+      const start = new Date('2023-01-01T00:00:00Z')
+      const end = new Date('2023-01-01T23:59:59Z')
+      getTimeRange.mockReturnValue({ start, end })
+      Measure.aggregate.mockResolvedValue([])
+
+      const fields = 'temperature, ph'
+      await getMeasuresByPeriod(deviceId, period, targetDate, fields)
+
+      const pipeline = Measure.aggregate.mock.calls[0][0]
+      expect(pipeline[3].$project).toMatchObject({
+        _id: 0,
+        temperature: "$measures.temperature",
+        ph: "$measures.ph",
+        timestamp: "$measures.timestamp"
+      })
+      expect(pipeline[3].$project.humidity).toBeUndefined()
+      expect(pipeline[3].$project.uv).toBeUndefined()
+      expect(pipeline[3].$project.conductivity).toBeUndefined()
+    })
+
+    it('deve remover espaços em branco dos campos fornecidos', async () => {
+      getTimeRange.mockReturnValue({ start: new Date(), end: new Date() })
+      Measure.aggregate.mockResolvedValue([])
+
+      const fields = '  temperature ,  humidity  '
+      await getMeasuresByPeriod(deviceId, period, targetDate, fields)
+
+      const pipeline = Measure.aggregate.mock.calls[0][0]
+      expect(pipeline[3].$project.temperature).toBe("$measures.temperature")
+      expect(pipeline[3].$project.humidity).toBe("$measures.humidity")
+    })
+
+    it('deve lançar erro e logar quando getTimeRange falha', async () => {
+      const error = new Error('Invalid period')
+      getTimeRange.mockImplementation(() => { throw error })
+
+      await expect(getMeasuresByPeriod(deviceId, period, targetDate, null)).rejects.toThrow('Invalid period')
+      expect(console.error).toHaveBeenCalledWith(`Error: ${error.message}`)
+    })
+
+    it('deve lançar erro e logar quando Measure.aggregate falha', async () => {
+      getTimeRange.mockReturnValue({ start: new Date(), end: new Date() })
+      const error = new Error('DB failure')
+      Measure.aggregate.mockRejectedValue(error)
+
+      await expect(getMeasuresByPeriod(deviceId, period, targetDate, null)).rejects.toThrow('DB failure')
+      expect(console.error).toHaveBeenCalledWith(`Error: ${error.message}`)
+    })
+
+    it('deve lançar erro quando deviceId é inválido para ObjectId', async () => {
+      getTimeRange.mockReturnValue({ start: new Date(), end: new Date() })
+      const error = new Error('Invalid ObjectId')
+      mongoose.Types.ObjectId.mockImplementation(() => { throw error })
+
+      await expect(getMeasuresByPeriod('invalid-id', period, targetDate, null)).rejects.toThrow('Invalid ObjectId')
+      expect(console.error).toHaveBeenCalledWith(`Error: ${error.message}`)
+    })
+
+    it('deve retornar array vazio quando aggregate não encontra resultados', async () => {
+      getTimeRange.mockReturnValue({ start: new Date(), end: new Date() })
+      Measure.aggregate.mockResolvedValue([])
+
+      const result = await getMeasuresByPeriod(deviceId, period, targetDate, null)
+      expect(result).toEqual([])
+    })
+  })
+
+  describe('getMeasuresByCustomPeriod', () => {
+    const deviceId = '60d5ec49f1a2c8b1f8e4e1a1'
+    const startDate = '2023-01-01'
+    const endDate = '2023-01-31'
+
+    it('deve montar o pipeline corretamente com campos padrão quando fields não é fornecido', async () => {
+      Measure.aggregate.mockResolvedValue([{ temperature: 25, humidity: 60, timestamp: new Date() }])
+
+      const result = await getMeasuresByCustomPeriod(deviceId, startDate, endDate, null)
+
+      expect(mongoose.Types.ObjectId).toHaveBeenCalledWith(deviceId)
+      expect(Measure.aggregate).toHaveBeenCalledTimes(1)
+
+      const pipeline = Measure.aggregate.mock.calls[0][0]
+      expect(pipeline[0]).toEqual({ $match: { _id: deviceId } })
+      expect(pipeline[1]).toEqual({ $unwind: "$measures" })
+      expect(pipeline[2]).toEqual({
+        $match: {
+          "measures.timestamp": { $gte: new Date(startDate), $lte: new Date(endDate) }
+        }
+      })
+      expect(pipeline[3]).toEqual({
+        $project: {
+          _id: 0,
+          measures: {
+            "measures.temperature": 1,
+            "measures.humidity": 1,
+            "measures.timestamp": 1
+          }
+        }
+      })
+      expect(pipeline[4]).toEqual({ $sort: { "measures.timestamp": -1 } })
+      expect(pipeline[5]).toEqual({ $replaceRoot: { newRoot: "$measures" } })
+
+      expect(result).toEqual([{ temperature: 25, humidity: 60, timestamp: expect.any(Date) }])
+    })
+
+    it('deve montar o pipeline corretamente com campos customizados', async () => {
+      Measure.aggregate.mockResolvedValue([])
+
+      const fields = 'ph,uv'
+      await getMeasuresByCustomPeriod(deviceId, startDate, endDate, fields)
+
+      const pipeline = Measure.aggregate.mock.calls[0][0]
+      expect(pipeline[3].$project.measures).toEqual({
+        "measures.ph": 1,
+        "measures.uv": 1,
+        "measures.timestamp": 1
+      })
+    })
+
+    it('deve remover espaços em branco dos campos fornecidos', async () => {
+      Measure.aggregate.mockResolvedValue([])
+
+      const fields = ' ph , uv '
+      await getMeasuresByCustomPeriod(deviceId, startDate, endDate, fields)
+
+      const pipeline = Measure.aggregate.mock.calls[0][0]
+      expect(pipeline[3].$project.measures["measures.ph"]).toBe(1)
+      expect(pipeline[3].$project.measures["measures.uv"]).toBe(1)
+    })
+
+    it('deve lançar erro e logar quando Measure.aggregate falha', async () => {
+      const error = new Error('DB failure')
+      Measure.aggregate.mockRejectedValue(error)
+
+      await expect(getMeasuresByCustomPeriod(deviceId, startDate, endDate, null)).rejects.toThrow('DB failure')
+      expect(console.error).toHaveBeenCalledWith(`Error: ${error.message}`)
+    })
+
+    it('deve lançar erro quando deviceId é inválido para ObjectId', async () => {
+      const error = new Error('Invalid ObjectId')
+      mongoose.Types.ObjectId.mockImplementation(() => { throw error })
+
+      await expect(getMeasuresByCustomPeriod('invalid-id', startDate, endDate, null)).rejects.toThrow('Invalid ObjectId')
+      expect(console.error).toHaveBeenCalledWith(`Error: ${error.message}`)
+    })
+
+    it('deve lidar corretamente com string de fields vazia', async () => {
+      Measure.aggregate.mockResolvedValue([])
+
+      await getMeasuresByCustomPeriod(deviceId, startDate, endDate, '')
+
+      const pipeline = Measure.aggregate.mock.calls[0][0]
+      expect(pipeline[3].$project.measures).toEqual({
+        "measures.temperature": 1,
+        "measures.humidity": 1,
+        "measures.timestamp": 1
+      })
+    })
+
+    it('deve retornar array vazio quando aggregate não encontra resultados', async () => {
+      Measure.aggregate.mockResolvedValue([])
+
+      const result = await getMeasuresByCustomPeriod(deviceId, startDate, endDate, null)
+      expect(result).toEqual([])
+    })
+
+    it('deve lidar com datas inválidas gerando Invalid Date sem lançar erro na criação', async () => {
+      Measure.aggregate.mockResolvedValue([])
+
+      await getMeasuresByCustomPeriod(deviceId, 'invalid-date', 'invalid-date-2', null)
+
+      const pipeline = Measure.aggregate.mock.calls[0][0]
+      expect(pipeline[2].$match["measures.timestamp"].$gte.toString()).toBe('Invalid Date')
+      expect(pipeline[2].$match["measures.timestamp"].$lte.toString()).toBe('Invalid Date')
+    })
+  })
+})

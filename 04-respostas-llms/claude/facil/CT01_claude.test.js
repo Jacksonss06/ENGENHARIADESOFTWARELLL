@@ -1,0 +1,160 @@
+const {
+  calculateDaysPassed,
+  canAdvanceCycle,
+  advanceCycle
+} = require('./cycleUtils')
+
+describe('calculateDaysPassed', () => {
+  const REAL_DATE = Date
+
+  afterEach(() => {
+    global.Date = REAL_DATE
+  })
+
+  const mockToday = (isoDate) => {
+    const fixedDate = new REAL_DATE(isoDate)
+    global.Date = class extends REAL_DATE {
+      constructor(...args) {
+        if (args.length === 0) {
+          return fixedDate
+        }
+        return new REAL_DATE(...args)
+      }
+      static now() {
+        return fixedDate.getTime()
+      }
+    }
+  }
+
+  it('deve retornar 0 quando a data inicial é hoje', () => {
+    mockToday('2024-06-15T10:00:00.000Z')
+    const result = calculateDaysPassed('2024-06-15')
+    expect(result).toBe(0)
+  })
+
+  it('deve retornar 15 quando passaram exatamente 15 dias', () => {
+    mockToday('2024-06-15T00:00:00.000Z')
+    const result = calculateDaysPassed('2024-05-31')
+    expect(result).toBe(15)
+  })
+
+  it('deve retornar 1 quando passou apenas 1 dia', () => {
+    mockToday('2024-06-16T00:00:00.000Z')
+    const result = calculateDaysPassed('2024-06-15')
+    expect(result).toBe(1)
+  })
+
+  it('deve retornar valor negativo quando a data inicial está no futuro', () => {
+    mockToday('2024-06-15T00:00:00.000Z')
+    const result = calculateDaysPassed('2024-06-20')
+    expect(result).toBe(-5)
+  })
+
+  it('deve ignorar horas, minutos e segundos ao calcular a diferença', () => {
+    mockToday('2024-06-15T23:59:59.000Z')
+    const result = calculateDaysPassed('2024-06-15T00:00:01.000Z')
+    expect(result).toBe(0)
+  })
+
+  it('deve aceitar objetos Date como entrada', () => {
+    mockToday('2024-06-20T00:00:00.000Z')
+    const startDate = new REAL_DATE('2024-06-10T00:00:00.000Z')
+    const result = calculateDaysPassed(startDate)
+    expect(result).toBe(10)
+  })
+})
+
+describe('canAdvanceCycle', () => {
+  const REAL_DATE = Date
+
+  afterEach(() => {
+    global.Date = REAL_DATE
+  })
+
+  const mockToday = (isoDate) => {
+    const fixedDate = new REAL_DATE(isoDate)
+    global.Date = class extends REAL_DATE {
+      constructor(...args) {
+        if (args.length === 0) {
+          return fixedDate
+        }
+        return new REAL_DATE(...args)
+      }
+      static now() {
+        return fixedDate.getTime()
+      }
+    }
+  }
+
+  it('deve retornar true quando dias passados são iguais ao mínimo padrão (15)', () => {
+    mockToday('2024-06-15T00:00:00.000Z')
+    const cycle = { startDate: '2024-05-31' }
+    expect(canAdvanceCycle(cycle)).toBe(true)
+  })
+
+  it('deve retornar false quando dias passados são menores que o mínimo padrão', () => {
+    mockToday('2024-06-15T00:00:00.000Z')
+    const cycle = { startDate: '2024-06-05' }
+    expect(canAdvanceCycle(cycle)).toBe(false)
+  })
+
+  it('deve retornar true quando dias passados excedem o mínimo padrão', () => {
+    mockToday('2024-07-01T00:00:00.000Z')
+    const cycle = { startDate: '2024-05-01' }
+    expect(canAdvanceCycle(cycle)).toBe(true)
+  })
+
+  it('deve respeitar um valor customizado de minDays', () => {
+    mockToday('2024-06-15T00:00:00.000Z')
+    const cycle = { startDate: '2024-06-10' }
+    expect(canAdvanceCycle(cycle, 5)).toBe(true)
+    expect(canAdvanceCycle(cycle, 10)).toBe(false)
+  })
+
+  it('deve retornar true quando minDays é 0', () => {
+    mockToday('2024-06-15T00:00:00.000Z')
+    const cycle = { startDate: '2024-06-15' }
+    expect(canAdvanceCycle(cycle, 0)).toBe(true)
+  })
+})
+
+describe('advanceCycle', () => {
+  it('deve incrementar currentCycle em 1', () => {
+    const cycle = { currentCycle: 3, startDate: '2024-01-01', daysPassed: 20, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result.currentCycle).toBe(4)
+  })
+
+  it('deve resetar daysPassed para 0', () => {
+    const cycle = { currentCycle: 1, startDate: '2024-01-01', daysPassed: 30, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result.daysPassed).toBe(0)
+  })
+
+  it('deve definir manualAdvance como true', () => {
+    const cycle = { currentCycle: 1, startDate: '2024-01-01', daysPassed: 20, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result.manualAdvance).toBe(true)
+  })
+
+  it('deve atualizar startDate para a data atual', () => {
+    const cycle = { currentCycle: 1, startDate: '2024-01-01', daysPassed: 20, manualAdvance: false }
+    const before = new Date()
+    const result = advanceCycle(cycle)
+    const after = new Date()
+    expect(result.startDate.getTime()).toBeGreaterThanOrEqual(before.getTime())
+    expect(result.startDate.getTime()).toBeLessThanOrEqual(after.getTime())
+  })
+
+  it('deve retornar o mesmo objeto (mutação) passado como parâmetro', () => {
+    const cycle = { currentCycle: 1, startDate: '2024-01-01', daysPassed: 20, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result).toBe(cycle)
+  })
+
+  it('deve funcionar corretamente com currentCycle iniciando em 0', () => {
+    const cycle = { currentCycle: 0, startDate: '2024-01-01', daysPassed: 15, manualAdvance: false }
+    const result = advanceCycle(cycle)
+    expect(result.currentCycle).toBe(1)
+  })
+})

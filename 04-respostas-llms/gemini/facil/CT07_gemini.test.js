@@ -1,0 +1,102 @@
+const { getTimeRange } = require('./timeRange');
+
+describe('getTimeRange', () => {
+    beforeAll(() => {
+        jest.useFakeTimers();
+        jest.setSystemTime(new Date('2023-10-15T12:00:00Z')); // Domingo
+    });
+
+    afterAll(() => {
+        jest.useRealTimers();
+    });
+
+    describe('Casos de erro', () => {
+        it('deve lançar erro se a data alvo for inválida', () => {
+            expect(() => getTimeRange('dia', 'data-invalida')).toThrow('Data inválida');
+        });
+
+        it('deve lançar erro se o período fornecido for inválido', () => {
+            expect(() => getTimeRange('ano', '2023-10-15T12:00:00Z')).toThrow('Período inválido');
+        });
+
+        it('deve lançar erro se nenhum período for fornecido', () => {
+            expect(() => getTimeRange(null)).toThrow('Período inválido');
+        });
+    });
+
+    describe('Período: dia', () => {
+        it('deve retornar o intervalo correto para "dia" com targetDate fornecida', () => {
+            const { start, end } = getTimeRange('dia', '2023-10-15T15:30:45Z');
+            expect(start.toISOString()).toBe('2023-10-15T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-10-15T23:59:59.000Z');
+        });
+
+        it('deve retornar o intervalo correto para "dia" sem targetDate (usando data atual mockada)', () => {
+            const { start, end } = getTimeRange('dia');
+            expect(start.toISOString()).toBe('2023-10-15T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-10-15T23:59:59.000Z');
+        });
+
+        it('deve lidar corretamente com mudanças de ano para "dia"', () => {
+            const { start, end } = getTimeRange('dia', '2023-12-31T23:00:00Z');
+            expect(start.toISOString()).toBe('2023-12-31T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-12-31T23:59:59.000Z');
+        });
+    });
+
+    describe('Período: semana', () => {
+        it('deve retornar o intervalo correto para "semana" começando da segunda-feira quando targetDate é um domingo', () => {
+            // 15/10/2023 é domingo
+            const { start, end } = getTimeRange('semana', '2023-10-15T12:00:00Z');
+            expect(start.toISOString()).toBe('2023-10-09T00:00:00.000Z'); // Segunda-feira
+            expect(end.toISOString()).toBe('2023-10-15T23:59:59.000Z'); // Domingo
+        });
+
+        it('deve retornar o intervalo correto para "semana" começando da segunda-feira quando targetDate é uma segunda-feira', () => {
+            // 09/10/2023 é segunda-feira
+            const { start, end } = getTimeRange('semana', '2023-10-09T12:00:00Z');
+            expect(start.toISOString()).toBe('2023-10-09T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-10-15T23:59:59.000Z');
+        });
+
+        it('deve calcular corretamente a "semana" quando cruza o limite de meses', () => {
+            // 01/11/2023 é quarta-feira
+            const { start, end } = getTimeRange('semana', '2023-11-01T12:00:00Z');
+            expect(start.toISOString()).toBe('2023-10-30T00:00:00.000Z'); // Segunda-feira do mês anterior
+            expect(end.toISOString()).toBe('2023-11-05T23:59:59.000Z'); // Domingo do mês atual
+        });
+
+        it('deve calcular corretamente a "semana" quando cruza o limite de anos', () => {
+            // 01/01/2024 é segunda-feira
+            const { start, end } = getTimeRange('semana', '2024-01-01T12:00:00Z');
+            expect(start.toISOString()).toBe('2024-01-01T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2024-01-07T23:59:59.000Z');
+        });
+    });
+
+    describe('Período: mês', () => {
+        it('deve retornar o intervalo correto para "mês" com 31 dias', () => {
+            const { start, end } = getTimeRange('mês', '2023-10-15T12:00:00Z');
+            expect(start.toISOString()).toBe('2023-10-01T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-10-31T23:59:59.000Z');
+        });
+
+        it('deve retornar o intervalo correto para "mês" com 30 dias', () => {
+            const { start, end } = getTimeRange('mês', '2023-11-15T12:00:00Z');
+            expect(start.toISOString()).toBe('2023-11-01T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-11-30T23:59:59.000Z');
+        });
+
+        it('deve retornar o intervalo correto para "mês" em fevereiro em um ano não bissexto (28 dias)', () => {
+            const { start, end } = getTimeRange('mês', '2023-02-15T12:00:00Z');
+            expect(start.toISOString()).toBe('2023-02-01T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2023-02-28T23:59:59.000Z');
+        });
+
+        it('deve retornar o intervalo correto para "mês" em fevereiro em um ano bissexto (29 dias)', () => {
+            const { start, end } = getTimeRange('mês', '2024-02-15T12:00:00Z');
+            expect(start.toISOString()).toBe('2024-02-01T00:00:00.000Z');
+            expect(end.toISOString()).toBe('2024-02-29T23:59:59.000Z');
+        });
+    });
+});

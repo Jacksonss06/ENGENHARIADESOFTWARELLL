@@ -1,0 +1,77 @@
+const { getTimeRange } = require('../src/utils/timeRange')
+
+describe('getTimeRange - período mês', () => {
+    test('deve retornar o intervalo correto para um mês com data fornecida', () => {
+        const { start, end } = getTimeRange('mês', '2024-03-15T10:00:00Z')
+
+        expect(start.toISOString()).toBe('2024-03-01T00:00:00.000Z')
+        expect(end.toISOString()).toBe('2024-03-31T23:59:59.000Z')
+    })
+
+    test('deve retornar o intervalo correto para fevereiro em ano bissexto', () => {
+        const { start, end } = getTimeRange('mês', '2024-02-10T00:00:00Z')
+
+        expect(start.toISOString()).toBe('2024-02-01T00:00:00.000Z')
+        expect(end.toISOString()).toBe('2024-02-29T23:59:59.000Z')
+    })
+
+    test('deve retornar o intervalo correto para fevereiro em ano não bissexto', () => {
+        const { start, end } = getTimeRange('mês', '2023-02-10T00:00:00Z')
+
+        expect(start.toISOString()).toBe('2023-02-01T00:00:00.000Z')
+        expect(end.toISOString()).toBe('2023-02-28T23:59:59.000Z')
+    })
+
+    test('deve retornar o intervalo correto para dezembro (mudança de ano)', () => {
+        const { start, end } = getTimeRange('mês', '2024-12-25T00:00:00Z')
+
+        expect(start.toISOString()).toBe('2024-12-01T00:00:00.000Z')
+        expect(end.toISOString()).toBe('2024-12-31T23:59:59.000Z')
+    })
+
+    test('deve retornar o intervalo correto para janeiro', () => {
+        const { start, end } = getTimeRange('mês', '2024-01-15T00:00:00Z')
+
+        expect(start.toISOString()).toBe('2024-01-01T00:00:00.000Z')
+        expect(end.toISOString()).toBe('2024-01-31T23:59:59.000Z')
+    })
+
+    test('deve utilizar a data atual quando targetDate não for fornecido', () => {
+        const now = new Date()
+        const { start, end } = getTimeRange('mês')
+
+        expect(start.getUTCFullYear()).toBe(now.getUTCFullYear())
+        expect(start.getUTCMonth()).toBe(now.getUTCMonth())
+        expect(start.getUTCDate()).toBe(1)
+        expect(start.getUTCHours()).toBe(0)
+        expect(start.getUTCMinutes()).toBe(0)
+        expect(start.getUTCSeconds()).toBe(0)
+
+        expect(end.getUTCFullYear()).toBe(now.getUTCFullYear())
+        expect(end.getUTCMonth()).toBe(now.getUTCMonth())
+        expect(end.getUTCHours()).toBe(23)
+        expect(end.getUTCMinutes()).toBe(59)
+        expect(end.getUTCSeconds()).toBe(59)
+    })
+
+    test('deve lançar erro para data inválida', () => {
+        expect(() => getTimeRange('mês', 'data-invalida')).toThrow('Data inválida')
+    })
+
+    test('deve lançar erro para período inválido', () => {
+        expect(() => getTimeRange('ano', '2024-03-15T10:00:00Z')).toThrow('Período inválido')
+    })
+
+    test('start deve ser sempre anterior ou igual ao end', () => {
+        const { start, end } = getTimeRange('mês', '2024-06-10T00:00:00Z')
+        expect(start.getTime()).toBeLessThanOrEqual(end.getTime())
+    })
+
+    test('deve retornar objetos Date válidos', () => {
+        const { start, end } = getTimeRange('mês', '2024-07-01T00:00:00Z')
+        expect(start instanceof Date).toBe(true)
+        expect(end instanceof Date).toBe(true)
+        expect(isNaN(start)).toBe(false)
+        expect(isNaN(end)).toBe(false)
+    })
+})

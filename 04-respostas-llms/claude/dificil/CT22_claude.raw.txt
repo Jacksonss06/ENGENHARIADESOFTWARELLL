@@ -1,0 +1,245 @@
+```javascript
+jest.mock('../model/Devices')
+jest.mock('../utils/timeRange')
+
+const Measure = require('../model/Devices')
+const mongoose = require('mongoose')
+const { getTimeRange } = require('../utils/timeRange')
+const graphicsService = require('./graphicsService')
+
+describe('graphicsService', () => {
+    const validDeviceId = '507f1f77bcf86cd799439011'
+
+    afterEach(() => {
+        jest.clearAllMocks()
+    })
+
+    describe('getMeasuresByCustomPeriod', () => {
+        test('deve montar pipeline com projeção padrão quando fields não é informado', async () => {
+            const fakeResult = [{ temperature: 20, humidity: 50, timestamp: new Date('2023-01-01') }]
+            Measure.aggregate = jest.fn().mockResolvedValue(fakeResult)
+
+            const startDate = '2023-01-01'
+            const endDate = '2023-01-31'
+
+            const result = await graphicsService.getMeasuresByCustomPeriod(
+                validDeviceId,
+                startDate,
+                endDate,
+                undefined
+            )
+
+            expect(result).toEqual(fakeResult)
+            expect(Measure.aggregate).toHaveBeenCalledTimes(1)
+
+            const pipeline = Measure.aggregate.mock.calls[0][0]
+
+            expect(pipeline[0]).toEqual({
+                $match: { _id: new mongoose.Types.ObjectId(validDeviceId) }
+            })
+            expect(pipeline[1]).toEqual({ $unwind: '$measures' })
+            expect(pipeline[2]).toEqual({
+                $match: {
+                    'measures.timestamp': {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                    }
+                }
+            })
+            expect(pipeline[3]).toEqual({
+                $project: {
+                    _id: 0,
+                    measures: {
+                        'measures.temperature': 1,
+                        'measures.humidity': 1,
+                        'measures.timestamp': 1
+                    }
+                }
+            })
+            expect(pipeline[4]).toEqual({ $sort: { 'measures.timestamp': -1 } })
+            expect(pipeline[5]).toEqual({ $replaceRoot: { newRoot: '$measures' } })
+        })
+
+        test('deve montar pipeline com projeção customizada quando fields é informado', async () => {
+            const fakeResult = [{ ph: 7, uv: 3, timestamp: new Date('2023-02-01') }]
+            Measure.aggregate = jest.fn().mockResolvedValue(fakeResult)
+
+            const startDate = '2023-02-01'
+            const endDate = '2023-02-28'
+            const fields = ' ph , uv '
+
+            const result = await graphicsService.getMeasuresByCustomPeriod(
+                validDeviceId,
+                startDate,
+                endDate,
+                fields
+            )
+
+            expect(result).toEqual(fakeResult)
+            const pipeline = Measure.aggregate.mock.calls[0][0]
+
+            expect(pipeline[3]).toEqual({
+                $project: {
+                    _id: 0,
+                    measures: {
+                        'measures.ph': 1,
+                        'measures.uv': 1,
+                        'measures.timestamp': 1
+                    }
+                }
+            })
+        })
+
+        test('deve montar pipeline com um único campo customizado', async () => {
+            Measure.aggregate = jest.fn().mockResolvedValue([])
+
+            const fields = 'conductivity'
+            await graphicsService.getMeasuresByCustomPeriod(
+                validDeviceId,
+                '2023-01-01',
+                '2023-01-02',
+                fields
+            )
+
+            const pipeline = Measure.aggregate.mock.calls[0][0]
+            expect(pipeline[3]).toEqual({
+                $project: {
+                    _id: 0,
+                    measures: {
+                        'measures.conductivity': 1,
+                        'measures.timestamp': 1
+                    }
+                }
+            })
+        })
+
+        test('deve lançar erro e logar quando Measure.aggregate rejeita', async () => {
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+            const error = new Error('DB failure')
+            Measure.aggregate = jest.fn().mockRejectedValue(error)
+
+            await expect(
+                graphicsService.getMeasuresByCustomPeriod(
+                    validDeviceId,
+                    '2023-01-01',
+                    '2023-01-02',
+                    'temperature'
+                )
+            ).rejects.toThrow('DB failure')
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith(`Error: ${error.message}`)
+            consoleErrorSpy.mockRestore()
+        })
+
+        test('deve lançar erro quando deviceId é inválido (ObjectId inválido)', async () => {
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+            Measure.aggregate = jest.fn()
+
+            await expect(
+                graphicsService.getMeasuresByCustomPeriod(
+                    'invalid-id',
+                    '2023-01-01',
+                    '2023-01-02',
+                    'temperature'
+                )
+            ).rejects.toThrow()
+
+            expect(Measure.aggregate).not.toHaveBeenCalled()
+            consoleErrorSpy.mockRestore()
+        })
+
+        test('deve retornar array vazio quando não há resultados', async () => {
+            Measure.aggregate = jest.fn().mockResolvedValue([])
+
+            const result = await graphicsService.getMeasuresByCustomPeriod(
+                validDeviceId,
+                '2023-01-01',
+                '2023-01-02',
+                'temperature'
+            )
+
+            expect(result).toEqual([])
+        })
+    })
+
+    describe('getMeasuresByPeriod', () => {
+        test('deve montar pipeline com projeção padrão quando fields não é informado', async () => {
+            const start = new Date('2023-01-01')
+            const end = new Date('2023-01-31')
+            getTimeRange.mockReturnValue({ start, end })
+
+            const fakeResult = [{ temperature: 25, timestamp: new Date('2023-01-15') }]
+            Measure.aggregate = jest.fn().mockResolvedValue(fakeResult)
+
+            const result = await graphicsService.getMeasuresByPeriod(
+                validDeviceId,
+                'monthly',
+                '2023-01-01',
+                undefined
+            )
+
+            expect(result).toEqual(fakeResult)
+            expect(getTimeRange).toHaveBeenCalledWith('monthly', '2023-01-01')
+
+            const pipeline = Measure.aggregate.mock.calls[0][0]
+            expect(pipeline[2]).toEqual({
+                $match: {
+                    'measures.timestamp': { $gte: start, $lte: end }
+                }
+            })
+            expect(pipeline[3]).toEqual({
+                $project: {
+                    _id: 0,
+                    temperature: '$measures.temperature',
+                    humidity: '$measures.humidity',
+                    ph: '$measures.ph',
+                    uv: '$measures.uv',
+                    conductivity: '$measures.conductivity',
+                    timestamp: '$measures.timestamp'
+                }
+            })
+            expect(pipeline[4]).toEqual({ $sort: { timestamp: -1 } })
+        })
+
+        test('deve montar pipeline com projeção customizada quando fields é informado', async () => {
+            const start = new Date('2023-02-01')
+            const end = new Date('2023-02-28')
+            getTimeRange.mockReturnValue({ start, end })
+
+            Measure.aggregate = jest.fn().mockResolvedValue([])
+
+            await graphicsService.getMeasuresByPeriod(
+                validDeviceId,
+                'monthly',
+                '2023-02-01',
+                'ph, uv'
+            )
+
+            const pipeline = Measure.aggregate.mock.calls[0][0]
+            expect(pipeline[3]).toEqual({
+                $project: {
+                    _id: 0,
+                    ph: '$measures.ph',
+                    uv: '$measures.uv',
+                    timestamp: '$measures.timestamp'
+                }
+            })
+        })
+
+        test('deve lançar erro e logar quando Measure.aggregate rejeita', async () => {
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+            getTimeRange.mockReturnValue({ start: new Date(), end: new Date() })
+
+            const error = new Error('Aggregation failed')
+            Measure.aggregate = jest.fn().mockRejectedValue(error)
+
+            await expect(
+                graphicsService.getMeasuresByPeriod(validDeviceId, 'daily', '2023-01-01', undefined)
+            ).rejects.toThrow('Aggregation failed')
+
+            expect(consoleErrorSpy).toHaveBeenCalledWith(`Error: ${error.message}`)
+            consoleErrorSpy.mockRestore()
+        })
+    })
+})
+```

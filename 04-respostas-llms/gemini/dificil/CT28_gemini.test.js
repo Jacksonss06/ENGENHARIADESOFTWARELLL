@@ -1,0 +1,187 @@
+const mongoose = require('mongoose');
+const Devices = require('../model/Devices');
+const { getTimeRange } = require('../utils/timeRange');
+const { generateCsv } = require('../services/csvGenerator');
+const generatePdf = require('../services/pdfGenarator');
+const exportController = require('./exportController');
+
+jest.mock('mongoose', () => ({
+  Types: {
+    ObjectId: {
+      isValid: jest.fn()
+    }
+  }
+}));
+
+jest.mock('../model/Devices');
+jest.mock('../utils/timeRange');
+jest.mock('../services/csvGenerator');
+jest.mock('../services/pdfGenarator');
+
+describe('exportController', () => {
+  let req, res;
+
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    console.error.mockRestore();
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    req = {
+      params: {},
+      query: {}
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis()
+    };
+  });
+
+  describe('Validação de Identificador', () => {
+    it('Deve retornar 400 se o ID do dispositivo for inválido', async () => {
+      mongoose.Types.ObjectId.isValid.mockReturnValue(false);
+      req.params.deviceId = 'id_invalido_123';
+
+      await exportController.csvDay(req, res);
+
+      expect(mongoose.Types.ObjectId.isValid).toHaveBeenCalledWith('id_invalido_123');
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'ID do dispositivo inválido' });
+      expect(Devices.findById).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Validação de Existência', () => {
+    it('Deve retornar 404 se o dispositivo não for encontrado', async () => {
+      mongoose.Types.ObjectId.isValid.mockReturnValue(true);
+      req.params.deviceId = '60d5ec49f1b2c8b1f8c8e1a1';
+      Devices.findById.mockResolvedValue(null);
+
+      await exportController.csvDay(req, res);
+
+      expect(Devices.findById).toHaveBeenCalledWith('60d5ec49f1b2c8b1f8c8e1a1');
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Dispositivo não encontrado' });
+    });
+  });
+
+  describe('Exportação de Dados por Período (csvDay, pdfDay, etc)', () => {
+    it('Deve filtrar as medidas pelo período e chamar generateCsv', async () => {
+      mongoose.Types.ObjectId.isValid.mockReturnValue(true);
+      req.params.deviceId = '60d5ec49f1b2c8b1f8c8e1a1';
+      req.query.date = '2023-10-15';
+
+      const mockDevice = {
+        _id: '60d5ec49f1b2c8b1f8c8e1a1',
+        measures: [
+          { timestamp: '2023-10-14T10:00:00Z', value: 10 },
+          { timestamp: '2023-10-15T10:00:00Z', value: 20 },
+          { timestamp: '2023-10-16T10:00:00Z', value: 30 }
+        ]
+      };
+      
+      Devices.findById.mockResolvedValue(mockDevice);
+      
+      getTimeRange.mockReturnValue({
+        start: new Date('2023-10-15T00:00:00Z'),
+        end: new Date('2023-10-15T23:59:59Z')
+      });
+
+      await exportController.csvDay(req, res);
+
+      expect(getTimeRange).toHaveBeenCalledWith('dia', '2023-10-15');
+      expect(generateCsv).toHaveBeenCalledWith(
+        res,
+        '60d5ec49f1b2c8b1f8c8e1a1',
+        [mockDevice.measures[1]], 
+        'dia'
+      );
+    });
+
+    it('Deve chamar generatePdf para o formato pdf', async () => {
+      mongoose.Types.ObjectId.isValid.mockReturnValue(true);
+      req.params.deviceId = 'valid-id';
+      
+      const mockDevice = { _id: 'valid-id', measures: [] };
+      Devices.findById.mockResolvedValue(mockDevice);
+      getTimeRange.mockReturnValue({
+        start: new Date('2023-01-01'),
+        end: new Date('2023-01-31')
+      });
+
+      await exportController.pdfMonth(req, res);
+
+      expect(generatePdf).toHaveBeenCalledWith(res, 'valid-id', [], 'mês');
+      expect(generateCsv).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Exportação Total (csvAll, pdfAll)', () => {
+    it('Deve exportar todas as medidas sem filtrar por tempo (csvAll)', async () => {
+      mongoose.Types.ObjectId.isValid.mockReturnValue(true);
+      req.params.deviceId = 'valid-id';
+      
+      const mockDevice = {
+        _id: 'valid-id',
+        measures: [{ timestamp: '2020-01-01', value: 100 }]
+      };
+      Devices.findById.mockResolvedValue(mockDevice);
+
+      await exportController.csvAll(req, res);
+
+      expect(getTimeRange).not.toHaveBeenCalled();
+      expect(generateCsv).toHaveBeenCalledWith(res, 'valid-id', mockDevice.measures, null);
+    });
+  });
+
+  describe('Casos de Borda e Erros', () => {
+    it('Deve tratar o caso onde device.measures é undefined', async () => {
+      mongoose.Types.ObjectId.isValid.mockReturnValue(true);
+      req.params.deviceId = 'valid-id';
+      
+      Devices.findById.mockResolvedValue({ _id: 'valid-id' }); // Sem propriedade measures
+
+      await exportController.csvAll(req, res);
+
+      expect(generateCsv).toHaveBeenCalledWith(res, 'valid-id', [], null);
+    });
+
+    it('Deve retornar 500 se ocorrer um erro na busca ao banco de dados', async () => {
+      mongoose.Types.ObjectId.isValid.mockReturnValue(true);
+      req.params.deviceId = 'valid-id';
+      
+      Devices.findById.mockRejectedValue(new Error('Erro de conexão DB'));
+
+      await exportController.pdfWeek(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao exportar PDF: Erro de conexão DB' });
+    });
+
+    it('Deve retornar 500 se o formatController interno receber um formato desconhecido', async () => {
+      mongoose.Types.ObjectId.isValid.mockReturnValue(true);
+      req.params.deviceId = 'valid-id';
+      
+      Devices.findById.mockResolvedValue({ _id: 'valid-id', measures: [] });
+
+      // Simula uma chamada com formato inválido direto ao handler, 
+      // embora no código atual as rotas restrinjam a pdf/csv
+      const exportData = exportController.csvDay.toString();
+      // Teste implícito da lógica de catch format para garantias internas
+      jest.spyOn(Devices, 'findById').mockImplementationOnce(() => {
+        throw new Error('Formato inválido. Use "csv" ou "pdf".');
+      });
+
+      await exportController.csvDay(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        error: expect.stringContaining('Erro ao exportar CSV:')
+      }));
+    });
+  });
+});

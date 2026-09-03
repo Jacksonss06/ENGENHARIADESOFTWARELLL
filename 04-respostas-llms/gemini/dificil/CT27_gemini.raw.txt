@@ -1,0 +1,162 @@
+```javascript
+const Devices = require('../model/Devices');
+const { cycleDevices } = require('./devicesController');
+
+jest.mock('../model/Devices');
+jest.mock('../utils/time', () => ({}));
+jest.mock('../utils/timeManager', () => ({ getTimerForDevice: jest.fn() }));
+jest.mock('../utils/cycleUtils', () => ({ calculateDaysPassed: jest.fn() }));
+jest.mock('fs', () => ({ unlinkSync: jest.fn() }));
+jest.mock('../config/cloudinary', () => ({ uploader: { upload: jest.fn() } }));
+
+describe('devicesController.cycleDevices', () => {
+    let req;
+    let res;
+
+    beforeAll(() => {
+        jest.spyOn(console, 'log').mockImplementation(() => {});
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    beforeEach(() => {
+        req = {
+            user: {},
+            params: {}
+        };
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        };
+        jest.clearAllMocks();
+    });
+
+    afterAll(() => {
+        console.log.mockRestore();
+        console.error.mockRestore();
+    });
+
+    it('deve iniciar um novo ciclo (primeiro ciclo) para um usuário admin', async () => {
+        req.user = { role: 'admin' };
+        req.params = { deviceId: 'device-123' };
+
+        const mockDevice = {
+            _id: 'device-123',
+            cycles: [],
+            save: jest.fn().mockResolvedValue(true)
+        };
+
+        Devices.findById.mockResolvedValue(mockDevice);
+
+        await cycleDevices(req, res);
+
+        expect(Devices.findById).toHaveBeenCalledWith('device-123');
+        expect(mockDevice.cycles).toHaveLength(1);
+        expect(mockDevice.cycles[0].currentCycle).toBe(1);
+        expect(mockDevice.cycles[0].daysPassed).toBe(0);
+        expect(mockDevice.cycles[0].manualAdvance).toBe(true);
+        expect(mockDevice.cycles[0].startDate).toBeInstanceOf(Date);
+        expect(mockDevice.lastCycleUpdate).toEqual(mockDevice.cycles[0].startDate);
+        expect(mockDevice.save).toHaveBeenCalled();
+        expect(res.json).toHaveBeenCalledWith({
+            message: 'Novo ciclo iniciado com sucesso',
+            cycle: mockDevice.cycles[0]
+        });
+    });
+
+    it('deve incrementar o ciclo para um usuário não-admin', async () => {
+        req.user = { role: 'user', id: 'user-456' };
+        req.params = { deviceId: 'device-123' };
+
+        const mockDevice = {
+            _id: 'device-123',
+            user: 'user-456',
+            cycles: [{ currentCycle: 3 }],
+            save: jest.fn().mockResolvedValue(true)
+        };
+
+        Devices.findOne.mockResolvedValue(mockDevice);
+
+        await cycleDevices(req, res);
+
+        expect(Devices.findOne).toHaveBeenCalledWith({ _id: 'device-123', user: 'user-456' });
+        expect(mockDevice.cycles).toHaveLength(2);
+        expect(mockDevice.cycles[1].currentCycle).toBe(4);
+        expect(mockDevice.cycles[1].daysPassed).toBe(0);
+        expect(mockDevice.save).toHaveBeenCalled();
+        expect(res.json).toHaveBeenCalledWith({
+            message: 'Novo ciclo iniciado com sucesso',
+            cycle: mockDevice.cycles[1]
+        });
+    });
+
+    it('deve retornar 404 se o dispositivo não for encontrado ao buscar por admin', async () => {
+        req.user = { role: 'admin' };
+        req.params = { deviceId: 'invalid-device' };
+
+        Devices.findById.mockResolvedValue(null);
+
+        await cycleDevices(req, res);
+
+        expect(Devices.findById).toHaveBeenCalledWith('invalid-device');
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({
+            error: 'Dispositivo não encontrado ou você não tem permissão.'
+        });
+    });
+
+    it('deve retornar 404 se o dispositivo não for encontrado ao buscar por usuário não-admin', async () => {
+        req.user = { role: 'user', id: 'user-456' };
+        req.params = { deviceId: 'invalid-device' };
+
+        Devices.findOne.mockResolvedValue(null);
+
+        await cycleDevices(req, res);
+
+        expect(Devices.findOne).toHaveBeenCalledWith({ _id: 'invalid-device', user: 'user-456' });
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({
+            error: 'Dispositivo não encontrado ou você não tem permissão.'
+        });
+    });
+
+    it('deve retornar 500 se ocorrer um erro durante a busca no banco de dados', async () => {
+        req.user = { role: 'admin' };
+        req.params = { deviceId: 'device-123' };
+
+        const error = new Error('Erro de conexão');
+        Devices.findById.mockRejectedValue(error);
+
+        await cycleDevices(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({
+            error: 'Erro ao iniciar novo ciclo',
+            details: error.message
+        });
+    });
+
+    it('deve retornar 500 se ocorrer um erro ao salvar o dispositivo', async () => {
+        req.user = { role: 'user', id: 'user-456' };
+        req.params = { deviceId: 'device-123' };
+
+        const error = new Error('Falha ao salvar');
+        const mockDevice = {
+            _id: 'device-123',
+            user: 'user-456',
+            cycles: [],
+            save: jest.fn().mockRejectedValue(error)
+        };
+
+        Devices.findOne.mockResolvedValue(mockDevice);
+
+        await cycleDevices(req, res);
+
+        expect(mockDevice.save).toHaveBeenCalled();
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({
+            error: 'Erro ao iniciar novo ciclo',
+            details: error.message
+        });
+    });
+});
+```
