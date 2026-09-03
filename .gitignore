@@ -6,6 +6,8 @@ coverage/
 dist/
 build/
 *.log
+*.tmp
+resultado-jest-*.json
 .DS_Store
 Thumbs.db
 .vscode/

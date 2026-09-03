@@ -1,0 +1,12 @@
+{
+  "name": "execucao-testes-llms",
+  "version": "1.0.0",
+  "description": "Ambiente padronizado para execucao dos testes gerados pelas LLMs",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0"
+  }
+}

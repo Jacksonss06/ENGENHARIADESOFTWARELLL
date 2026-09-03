@@ -1,0 +1,31 @@
+﻿id,nivel,alvo,arquivo_original,arquivo_unidade,objetivo
+CT01,facil,calculateDaysPassed,src/utils/cycleUtils.js,CT01_calculatedayspassed.js,Calcular a quantidade de dias transcorridos desde uma data inicial.
+CT02,facil,canAdvanceCycle - mínimo atingido,src/utils/cycleUtils.js,CT02_canadvancecycle_minimo_atingido.js,Verificar o comportamento quando o ciclo já atingiu o número mínimo de dias.
+CT03,facil,canAdvanceCycle - mínimo não atingido,src/utils/cycleUtils.js,CT03_canadvancecycle_minimo_nao_atingido.js,Verificar o comportamento quando o ciclo ainda não atingiu o número mínimo de dias.
+CT04,facil,advanceCycle,src/utils/cycleUtils.js,CT04_advancecycle.js,Verificar a atualização dos atributos ao avançar manualmente um ciclo.
+CT05,facil,Timer.formatTime,src/utils/time.js,CT05_timer_formattime.js,Verificar a conversão de segundos para o formato HH:MM:SS.
+CT06,facil,Timer.padTime,src/utils/time.js,CT06_timer_padtime.js,Verificar o preenchimento de zero à esquerda em valores menores que 10.
+CT07,facil,getTimeRange - dia,src/utils/timeRange.js,CT07_gettimerange_dia.js,Verificar o intervalo UTC correspondente a um dia.
+CT08,facil,getTimeRange - semana,src/utils/timeRange.js,CT08_gettimerange_semana.js,Verificar o intervalo semanal de segunda-feira a domingo.
+CT09,facil,getTimeRange - mês,src/utils/timeRange.js,CT09_gettimerange_mes.js,Verificar o intervalo correspondente ao primeiro e último instante de um mês.
+CT10,facil,getTimeRange - período inválido,src/utils/timeRange.js,CT10_gettimerange_periodo_invalido.js,Verificar o tratamento de um período não suportado.
+CT11,medio,adminMiddleware - administrador,src/middlewares/adminMiddleware.js,CT11_adminmiddleware_administrador.js,Verificar a autorização de um usuário com papel admin.
+CT12,medio,adminMiddleware - acesso negado,src/middlewares/adminMiddleware.js,CT12_adminmiddleware_acesso_negado.js,Verificar a resposta para usuário sem papel de administrador.
+CT13,medio,validateRegister - username ausente,src/middlewares/validationMiddleware.js,CT13_validateregister_username_ausente.js,Verificar a validação de cadastro sem username.
+CT14,medio,validateRegister - senhas diferentes,src/middlewares/validationMiddleware.js,CT14_validateregister_senhas_diferentes.js,Verificar a validação quando password e confirmPassword diferem.
+CT15,medio,validateRegister - senha fraca,src/middlewares/validationMiddleware.js,CT15_validateregister_senha_fraca.js,Verificar a regra de complexidade mínima da senha.
+CT16,medio,validateRegister - cadastro válido,src/middlewares/validationMiddleware.js,CT16_validateregister_cadastro_valido.js,Verificar o fluxo de validação para dados de cadastro válidos.
+CT17,medio,validateLogin - senha ausente,src/middlewares/validationMiddleware.js,CT17_validatelogin_senha_ausente.js,Verificar a validação de login sem senha.
+CT18,medio,authMiddleware - token ausente,src/middlewares/authMiddleware.js,CT18_authmiddleware_token_ausente.js,Verificar o comportamento quando o cabeçalho Authorization não contém token.
+CT19,medio,authMiddleware - token válido,src/middlewares/authMiddleware.js,CT19_authmiddleware_token_valido.js,"Verificar a decodificação JWT, preenchimento de req.user e continuidade do middleware."
+CT20,medio,getTimerForDevice,src/utils/timeManager.js,CT20_gettimerfordevice.js,Verificar o gerenciamento/reutilização de Timer por identificador de dispositivo.
+CT21,dificil,getMeasuresByPeriod,src/services/graphicsService.js,CT21_getmeasuresbyperiod.js,Verificar a montagem do pipeline de agregação MongoDB para período e campos selecionados.
+CT22,dificil,getMeasuresByCustomPeriod,src/services/graphicsService.js,CT22_getmeasuresbycustomperiod.js,Verificar o pipeline de agregação para intervalo personalizado e projeção de campos.
+CT23,dificil,getCustomPeriodMeasures - datas obrigatórias,src/controllers/graphicsController.js,CT23_getcustomperiodmeasures_datas_obrigatorias.js,Verificar o controller quando startDate ou endDate não é informado.
+CT24,dificil,authController.login - sucesso,src/controllers/authController.js,CT24_authcontroller_login_sucesso.js,"Verificar o fluxo de autenticação bem-sucedida, incluindo banco, bcrypt e JWT."
+CT25,dificil,authController.register - username duplicado,src/controllers/authController.js,CT25_authcontroller_register_username_duplicado.js,Verificar a interrupção do cadastro quando o username já existe.
+CT26,dificil,devicesController.getOneDevice - escopo de usuário,src/controllers/devicesController.js,CT26_devicescontroller_getonedevice_escopo_de_usuario.js,Verificar que usuário comum pesquisa dispositivo restrito ao próprio user.id.
+CT27,dificil,devicesController.cycleDevices,src/controllers/devicesController.js,CT27_devicescontroller_cycledevices.js,"Verificar a criação de um novo ciclo, sequência, datas e persistência."
+CT28,dificil,exportController.csvDay - ObjectId inválido,src/controllers/exportController.js,CT28_exportcontroller_csvday_objectid_invalido.js,Verificar a validação do identificador antes da consulta ao banco.
+CT29,dificil,exportController.csvDay - filtro diário,src/controllers/exportController.js,CT29_exportcontroller_csvday_filtro_diario.js,Verificar filtragem temporal e envio apenas das medições do dia ao gerador CSV.
+CT30,dificil,generateCsv,src/services/csvGenerator.js,CT30_generatecsv.js,"Verificar geração de CSV por stream, cabeçalhos, normalização e finalização."

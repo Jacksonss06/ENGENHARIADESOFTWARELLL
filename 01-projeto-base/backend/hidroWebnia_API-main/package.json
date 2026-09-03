@@ -1,0 +1,37 @@
+{
+  "name": "devices",
+  "version": "1.0.0",
+  "description": "API de Devices",
+  "main": "app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "backend": "nodemon src/app.js"
+  },
+  "keywords": [],
+  "author": "João Lucas",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "cloudinary": "^2.7.0",
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "fast-csv": "^5.0.2",
+    "googleapis": "^135.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
+    "mdb-react-ui-kit": "^9.0.0",
+    "mongoose": "^8.9.5",
+    "mqtt": "^5.10.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^6.9.13",
+    "pdfmake": "^0.2.19",
+    "slug": "^9.0.0",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.3"
+  }
+}

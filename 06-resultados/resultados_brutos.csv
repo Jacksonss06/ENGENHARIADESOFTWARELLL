@@ -1,1 +1,1 @@
-﻿id,dificuldade,llm,modelo_versao,data_coleta,executou,passou,qtd_testes,qtd_passou,qtd_falhou,observacao
+﻿id,dificuldade,llm,modelo_versao,data_coleta,executou,passou,qtd_testes,qtd_passou,qtd_falhou,taxa_aprovacao,tempo_segundos,aderencia_escopo,observacao
