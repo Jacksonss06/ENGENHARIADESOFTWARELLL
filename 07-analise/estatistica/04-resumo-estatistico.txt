@@ -1,0 +1,50 @@
+ANÁLISE ESTATÍSTICA PAREADA
+============================================
+
+DESFECHO PRINCIPAL
+1 = suíte com sucesso integral
+0 = qualquer outro resultado
+
+AMOSTRA
+Unidades pareadas: 30
+LLMs comparadas: 3
+ChatGPT: 29/30
+Claude: 25/30
+Gemini: 24/30
+
+COCHRAN'S Q
+Q = 3.818182
+gl = 2
+p = 0.148215
+Resultado a alpha=0,05: não foi identificada diferença estatisticamente significativa
+
+COMPARAÇÕES PAREADAS - MCNEMAR EXATO
+
+ChatGPT x Claude
+Discordantes: 6
+ChatGPT=1 / Claude=0: 5
+ChatGPT=0 / Claude=1: 1
+p exato = 0.218750
+p ajustado por Holm = 0.437500
+Significativo após Holm: não
+
+ChatGPT x Gemini
+Discordantes: 7
+ChatGPT=1 / Gemini=0: 6
+ChatGPT=0 / Gemini=1: 1
+p exato = 0.125000
+p ajustado por Holm = 0.375000
+Significativo após Holm: não
+
+Claude x Gemini
+Discordantes: 9
+Claude=1 / Gemini=0: 5
+Claude=0 / Gemini=1: 4
+p exato = 1.000000
+p ajustado por Holm = 1.000000
+Significativo após Holm: não
+
+INTERPRETAÇÃO
+Os testes utilizam as mesmas 30 unidades como blocos pareados.
+Os casos Jest individuais não foram tratados como observações independentes.
+Diferença estatística deve ser interpretada separadamente das diferenças descritivas de percentual de sucesso.

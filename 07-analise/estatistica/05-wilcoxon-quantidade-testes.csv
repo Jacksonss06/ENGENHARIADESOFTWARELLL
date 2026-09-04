@@ -1,0 +1,4 @@
+comparacao,pares_nao_zero,w_positivo,w_negativo,w,z_aproximado,p_aproximado,p_holm,significativo_apos_holm
+ChatGPT x Claude,25,34.500,290.500,34.500,3.465941,0.000528,0.001057,sim
+ChatGPT x Gemini,29,227.500,207.500,207.500,0.207759,0.835417,0.835417,nao
+Claude x Gemini,29,384.500,50.500,50.500,3.620956,0.000294,0.000881,sim

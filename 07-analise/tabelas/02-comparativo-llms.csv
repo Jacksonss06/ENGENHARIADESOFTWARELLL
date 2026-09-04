@@ -1,0 +1,4 @@
+﻿llm,modelo,total_suites,suites_executadas,taxa_executabilidade,suites_sucesso,taxa_sucesso_integral,total_testes,testes_passaram,testes_falharam,taxa_aprovacao_testes,media_testes_por_suite_executada,tempo_medio_segundos
+ChatGPT,GPT-5.6 Sol,30,30,100.00,29,96.67,249,248,1,99.60,8.30,0.56
+Claude,Sonnet 5,30,29,96.67,25,83.33,348,327,21,93.97,12.00,0.70
+Gemini,3.1 Pro,30,28,93.33,24,80.00,244,239,5,97.95,8.71,0.64

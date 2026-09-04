@@ -1,0 +1,34 @@
+ANÁLISE ESTATÍSTICA
+============================================
+
+1. DESFECHO PRINCIPAL - SUCESSO INTEGRAL
+ChatGPT: 29/30 (96,67%)
+Claude: 25/30 (83,33%)
+Gemini: 24/30 (80,00%)
+
+Cochran Q: Q(2) = 3.818; p = 0.148215
+Resultado: não foi identificada diferença estatisticamente significativa.
+
+McNemar exato com correção de Holm:
+ChatGPT x Claude: p=0.218750; p_Holm=0.437500
+ChatGPT x Gemini: p=0.125000; p_Holm=0.375000
+Claude x Gemini: p=1.000000; p_Holm=1.000000
+
+2. ANÁLISE SECUNDÁRIA - CASOS JEST EXECUTADOS
+ChatGPT: total=249; média=8.30; mediana=8.00
+Claude: total=348; média=11.60; mediana=11.00
+Gemini: total=244; média=8.13; mediana=8.00
+
+Friedman: χ²(2) = 21.876; p = 0.000018
+Kendall W = 0.365
+
+Como o teste de Friedman foi significativo, as comparações pareadas de Wilcoxon são utilizadas como análise pós-hoc.
+
+ChatGPT x Claude: p=0.000528; p_Holm=0.001057
+ChatGPT x Gemini: p=0.835417; p_Holm=0.835417
+Claude x Gemini: p=0.000294; p_Holm=0.000881
+
+NOTA METODOLÓGICA
+Os valores de qtd_testes representam casos Jest efetivamente executados/reconhecidos durante a execução automatizada.
+Valores zero associados a erros de inicialização não devem ser interpretados como evidência de que a LLM gerou zero casos de teste.
+Os casos Jest individuais não são tratados como observações estatisticamente independentes.

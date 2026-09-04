@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="900"
+  height="560"
+  viewBox="0 0 900 560"
+>
+  <rect
+    width="100%"
+    height="100%"
+    fill="#ffffff"
+  />
+
+  <text
+    x="450"
+    y="38"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="22"
+    font-weight="bold"
+    fill="#222222"
+  >
+    Taxa de aprovação dos casos Jest por LLM
+  </text>
+
+  <text
+    x="450"
+    y="64"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="13"
+    fill="#666666"
+  >
+    Percentual de casos aprovados entre os testes efetivamente executados
+  </text>
+
+  
+  <line
+    x1="90"
+    y1="470"
+    x2="860"
+    y2="470"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="475"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    0%
+  </text>
+
+  <line
+    x1="90"
+    y1="396"
+    x2="860"
+    y2="396"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="401"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    20%
+  </text>
+
+  <line
+    x1="90"
+    y1="322"
+    x2="860"
+    y2="322"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="327"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    40%
+  </text>
+
+  <line
+    x1="90"
+    y1="248"
+    x2="860"
+    y2="248"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="253"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    60%
+  </text>
+
+  <line
+    x1="90"
+    y1="174"
+    x2="860"
+    y2="174"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="179"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    80%
+  </text>
+
+  <line
+    x1="90"
+    y1="100"
+    x2="860"
+    y2="100"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="105"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    100%
+  </text>
+
+  <rect
+    x="158.33333333333334"
+    y="101.48000000000002"
+    width="120"
+    height="368.52"
+    rx="4"
+    fill="#10a37f"
+  />
+
+  <text
+    x="218.33333333333334"
+    y="89.48000000000002"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="15"
+    font-weight="bold"
+    fill="#222222"
+  >
+    99,60%
+  </text>
+
+  <text
+    x="218.33333333333334"
+    y="500"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="14"
+    font-weight="bold"
+    fill="#222222"
+  >
+    ChatGPT
+  </text>
+
+  <rect
+    x="415"
+    y="122.31100000000004"
+    width="120"
+    height="347.68899999999996"
+    rx="4"
+    fill="#d97757"
+  />
+
+  <text
+    x="475"
+    y="110.31100000000004"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="15"
+    font-weight="bold"
+    fill="#222222"
+  >
+    93,97%
+  </text>
+
+  <text
+    x="475"
+    y="500"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="14"
+    font-weight="bold"
+    fill="#222222"
+  >
+    Claude
+  </text>
+
+  <rect
+    x="671.6666666666667"
+    y="107.58499999999998"
+    width="120"
+    height="362.415"
+    rx="4"
+    fill="#4285f4"
+  />
+
+  <text
+    x="731.6666666666667"
+    y="95.58499999999998"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="15"
+    font-weight="bold"
+    fill="#222222"
+  >
+    97,95%
+  </text>
+
+  <text
+    x="731.6666666666667"
+    y="500"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="14"
+    font-weight="bold"
+    fill="#222222"
+  >
+    Gemini
+  </text>
+
+</svg>

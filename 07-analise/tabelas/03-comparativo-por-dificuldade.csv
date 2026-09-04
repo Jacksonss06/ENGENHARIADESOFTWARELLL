@@ -1,0 +1,10 @@
+﻿llm,modelo,dificuldade,total_suites,suites_executadas,taxa_executabilidade,suites_sucesso,taxa_sucesso_integral,total_testes,testes_passaram,testes_falharam,taxa_aprovacao_testes
+ChatGPT,GPT-5.6 Sol,Fácil,10,10,100.00,10,100.00,83,83,0,100.00
+ChatGPT,GPT-5.6 Sol,Médio,10,10,100.00,10,100.00,96,96,0,100.00
+ChatGPT,GPT-5.6 Sol,Difícil,10,10,100.00,9,90.00,70,69,1,98.57
+Claude,Sonnet 5,Fácil,10,10,100.00,8,80.00,149,144,5,96.64
+Claude,Sonnet 5,Médio,10,10,100.00,9,90.00,106,99,7,93.40
+Claude,Sonnet 5,Difícil,10,9,90.00,8,80.00,93,84,9,90.32
+Gemini,3.1 Pro,Fácil,10,10,100.00,8,80.00,121,118,3,97.52
+Gemini,3.1 Pro,Médio,10,10,100.00,10,100.00,79,79,0,100.00
+Gemini,3.1 Pro,Difícil,10,8,80.00,6,60.00,44,42,2,95.45

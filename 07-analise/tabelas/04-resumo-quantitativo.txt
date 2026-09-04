@@ -1,0 +1,38 @@
+RESUMO QUANTITATIVO DO EXPERIMENTO
+
+Suítes analisadas: 90
+Suítes executáveis: 87 (96,67%)
+Suítes com sucesso integral: 78 (86,67%)
+Suítes com falha em testes: 9
+Erros de inicialização: 3
+
+Casos Jest executados: 841
+Casos aprovados: 814
+Casos falhos: 27
+Taxa de aprovação dos casos: 96,79%
+
+POR LLM
+
+ChatGPT
+Modelo: GPT-5.6 Sol
+Executabilidade: 100,00%
+Sucesso integral: 96,67%
+Casos executados: 249
+Casos aprovados: 248
+Taxa de aprovação dos casos: 99,60%
+
+Claude
+Modelo: Sonnet 5
+Executabilidade: 96,67%
+Sucesso integral: 83,33%
+Casos executados: 348
+Casos aprovados: 327
+Taxa de aprovação dos casos: 93,97%
+
+Gemini
+Modelo: 3.1 Pro
+Executabilidade: 93,33%
+Sucesso integral: 80,00%
+Casos executados: 244
+Casos aprovados: 239
+Taxa de aprovação dos casos: 97,95%

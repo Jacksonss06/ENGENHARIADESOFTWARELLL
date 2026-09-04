@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="900"
+  height="560"
+  viewBox="0 0 900 560"
+>
+  <rect
+    width="100%"
+    height="100%"
+    fill="#ffffff"
+  />
+
+  <text
+    x="450"
+    y="38"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="22"
+    font-weight="bold"
+    fill="#222222"
+  >
+    Quantidade de casos Jest executados por LLM
+  </text>
+
+  <text
+    x="450"
+    y="64"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="13"
+    fill="#666666"
+  >
+    Total de casos presentes nas suítes que conseguiram executar
+  </text>
+
+  
+  <line
+    x1="90"
+    y1="470"
+    x2="860"
+    y2="470"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="475"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    0
+  </text>
+
+  <line
+    x1="90"
+    y1="396"
+    x2="860"
+    y2="396"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="401"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    70
+  </text>
+
+  <line
+    x1="90"
+    y1="322"
+    x2="860"
+    y2="322"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="327"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    140
+  </text>
+
+  <line
+    x1="90"
+    y1="248"
+    x2="860"
+    y2="248"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="253"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    210
+  </text>
+
+  <line
+    x1="90"
+    y1="174"
+    x2="860"
+    y2="174"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="179"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    280
+  </text>
+
+  <line
+    x1="90"
+    y1="100"
+    x2="860"
+    y2="100"
+    stroke="#d9d9d9"
+    stroke-width="1"
+  />
+
+  <text
+    x="78"
+    y="105"
+    text-anchor="end"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="12"
+    fill="#555555"
+  >
+    350
+  </text>
+
+  <rect
+    x="158.33333333333334"
+    y="206.7714285714286"
+    width="120"
+    height="263.2285714285714"
+    rx="4"
+    fill="#10a37f"
+  />
+
+  <text
+    x="218.33333333333334"
+    y="194.7714285714286"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="15"
+    font-weight="bold"
+    fill="#222222"
+  >
+    249
+  </text>
+
+  <text
+    x="218.33333333333334"
+    y="500"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="14"
+    font-weight="bold"
+    fill="#222222"
+  >
+    ChatGPT
+  </text>
+
+  <rect
+    x="415"
+    y="102.1142857142857"
+    width="120"
+    height="367.8857142857143"
+    rx="4"
+    fill="#d97757"
+  />
+
+  <text
+    x="475"
+    y="90.1142857142857"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="15"
+    font-weight="bold"
+    fill="#222222"
+  >
+    348
+  </text>
+
+  <text
+    x="475"
+    y="500"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="14"
+    font-weight="bold"
+    fill="#222222"
+  >
+    Claude
+  </text>
+
+  <rect
+    x="671.6666666666667"
+    y="212.05714285714282"
+    width="120"
+    height="257.9428571428572"
+    rx="4"
+    fill="#4285f4"
+  />
+
+  <text
+    x="731.6666666666667"
+    y="200.05714285714282"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="15"
+    font-weight="bold"
+    fill="#222222"
+  >
+    244
+  </text>
+
+  <text
+    x="731.6666666666667"
+    y="500"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="14"
+    font-weight="bold"
+    fill="#222222"
+  >
+    Gemini
+  </text>
+
+</svg>

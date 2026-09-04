@@ -1,1 +1,10 @@
-﻿id,dificuldade,chatgpt,claude,gemini,observacao
+﻿llm,modelo_versao,dificuldade,total_suites,suites_executadas,suites_sucesso,suites_falha_testes,erros_inicializacao,erros_execucao,sem_testes,taxa_executabilidade,taxa_sucesso_integral,total_testes,testes_passaram,testes_falharam,taxa_aprovacao_testes,media_testes_por_suite_executada,tempo_medio_segundos
+ChatGPT,GPT-5.6 Sol,facil,10,10,10,0,0,0,0,100.00,100.00,83,83,0,100.00,8.30,0.56
+ChatGPT,GPT-5.6 Sol,medio,10,10,10,0,0,0,0,100.00,100.00,96,96,0,100.00,9.60,0.54
+ChatGPT,GPT-5.6 Sol,dificil,10,10,9,1,0,0,0,100.00,90.00,70,69,1,98.57,7.00,0.58
+Claude,Sonnet 5,facil,10,10,8,2,0,0,0,100.00,80.00,149,144,5,96.64,14.90,0.57
+Claude,Sonnet 5,medio,10,10,9,1,0,0,0,100.00,90.00,106,99,7,93.40,10.60,0.57
+Claude,Sonnet 5,dificil,10,9,8,1,1,0,0,90.00,80.00,93,84,9,90.32,10.33,0.98
+Gemini,3.1 Pro,facil,10,10,8,2,0,0,0,100.00,80.00,121,118,3,97.52,12.10,0.60
+Gemini,3.1 Pro,medio,10,10,10,0,0,0,0,100.00,100.00,79,79,0,100.00,7.90,0.58
+Gemini,3.1 Pro,dificil,10,8,6,2,2,0,0,80.00,60.00,44,42,2,95.45,5.50,0.74

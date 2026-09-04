@@ -1,0 +1,4 @@
+comparacao,ambos_sucesso,primeiro_sucesso_segundo_falha,primeiro_falha_segundo_sucesso,ambos_falha,discordantes,p_exato,p_holm,significativo_apos_holm
+ChatGPT x Claude,24,5,1,0,6,0.218750,0.437500,nao
+ChatGPT x Gemini,23,6,1,0,7,0.125000,0.375000,nao
+Claude x Gemini,20,5,4,1,9,1.000000,1.000000,nao

@@ -1,1 +1,4 @@
-﻿llm,total_unidades,sucessos,falhas,taxa_sucesso,facil_sucessos,medio_sucessos,dificil_sucessos
+﻿llm,modelo_versao,total_suites,suites_executadas,suites_sucesso,suites_falha_testes,erros_inicializacao,erros_execucao,sem_testes,taxa_executabilidade,taxa_sucesso_integral,taxa_sucesso_entre_executaveis,total_testes,testes_passaram,testes_falharam,taxa_aprovacao_testes,media_testes_por_suite_executada,mediana_testes_por_suite_executada,tempo_medio_segundos,tempo_mediano_segundos
+ChatGPT,GPT-5.6 Sol,30,30,29,1,0,0,0,100.00,96.67,96.67,249,248,1,99.60,8.30,8.00,0.56,0.57
+Claude,Sonnet 5,30,29,25,4,1,0,0,96.67,83.33,86.21,348,327,21,93.97,12.00,12.00,0.70,0.58
+Gemini,3.1 Pro,30,28,24,4,2,0,0,93.33,80.00,85.71,244,239,5,97.95,8.71,8.50,0.64,0.60

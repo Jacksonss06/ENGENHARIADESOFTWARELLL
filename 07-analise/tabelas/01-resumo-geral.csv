@@ -1,0 +1,12 @@
+﻿metrica,valor
+Suítes analisadas,90
+Suítes executáveis,87
+Taxa de executabilidade (%),96.67
+Suítes com sucesso integral,78
+Taxa de sucesso integral (%),86.67
+Suítes com falha em testes,9
+Erros de inicialização,3
+Casos Jest executados,841
+Casos aprovados,814
+Casos falhos,27
+Taxa de aprovação dos casos (%),96.79

@@ -1,0 +1,164 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{float}
+
+\sloppy
+
+\title{Avaliação Comparativa de Large Language Models na Geração de Testes Automatizados em Jest para Código JavaScript}
+
+\author{Jackson de Sousa da Silva\inst{1}}
+
+\address{Especialização em Desenvolvimento Full Stack\\
+Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais -- Campus Manhuaçu\\
+Manhuaçu -- MG -- Brasil}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Large Language Models (LLMs) have been increasingly applied to software engineering tasks, including automated test generation. This work experimentally compares ChatGPT, Claude, and Gemini in generating Jest test suites for 30 JavaScript code units extracted from a real application. The same standardized prompt and a first-valid-response protocol without refinement were adopted for all models, resulting in 90 generated suites. Overall, 96.67\% of the suites were executable and 86.67\% achieved complete success. ChatGPT obtained the highest descriptive complete-success rate (96.67\%), followed by Claude (83.33\%) and Gemini (80.00\%); however, Cochran's Q test did not indicate a statistically significant global difference ($p=0.148$). Claude executed significantly more Jest cases than the other models. The results indicate that LLMs can support automated test generation, but execution and technical validation remain necessary.
+\end{abstract}
+
+\begin{resumo}
+Modelos de Linguagem de Grande Porte (LLMs) vêm sendo utilizados em atividades de Engenharia de Software, incluindo a geração automatizada de testes. Este trabalho compara experimentalmente ChatGPT, Claude e Gemini na geração de suítes Jest para 30 unidades de código JavaScript extraídas de uma aplicação real. Foi utilizado o mesmo prompt padronizado e a primeira resposta válida de cada modelo, sem refinamento, totalizando 90 suítes. No conjunto global, 96,67\% das suítes foram executáveis e 86,67\% obtiveram sucesso integral. O ChatGPT apresentou a maior taxa descritiva de sucesso integral (96,67\%), seguido por Claude (83,33\%) e Gemini (80,00\%); entretanto, o teste Q de Cochran não indicou diferença global estatisticamente significativa ($p=0,148$). O Claude executou quantidade significativamente maior de casos Jest. Os resultados indicam potencial das LLMs como apoio à geração de testes, mas reforçam a necessidade de execução e validação técnica dos artefatos produzidos.
+\end{resumo}
+
+\section{Introdução}
+
+A qualidade de software constitui uma preocupação central da Engenharia de Software, envolvendo atividades de verificação, validação e teste ao longo do processo de desenvolvimento. Nesse contexto, testes automatizados auxiliam a verificação contínua do comportamento implementado, embora sua elaboração possa exigir tempo, conhecimento do domínio e domínio das ferramentas e dependências utilizadas no projeto.
+
+Paralelamente, os avanços em Inteligência Artificial Generativa ampliaram o uso de Modelos de Linguagem de Grande Porte (Large Language Models -- LLMs) em atividades relacionadas ao desenvolvimento de software. Revisões recentes mostram crescimento do uso desses modelos para geração de casos de teste e apontam, simultaneamente, potencial e desafios relacionados à qualidade dos artefatos produzidos \cite{tasarsu2026slr}.
+
+No contexto de geração automática de testes, Schäfer et al. \cite{schaefer2024testpilot} avaliaram o uso de LLMs para criação de testes unitários JavaScript, demonstrando a viabilidade da abordagem, mas também a importância da execução e de mecanismos de realimentação. Dakhel et al. \cite{dakhel2024mutap} investigaram a associação entre LLMs e mutation testing, evidenciando que métricas de execução ou cobertura não representam, isoladamente, a capacidade de detectar defeitos.
+
+No cenário brasileiro, Oliveira, Silveira e Andrade \cite{oliveira2025qualidade} avaliaram empiricamente código Java produzido por diferentes LLMs, utilizando problemas de programação e métricas de qualidade. Lima e Lima \cite{lima2026llms}, por sua vez, investigaram o uso do ChatGPT na geração de casos de teste a partir de user stories, destacando o potencial de apoio das LLMs e a necessidade de análise crítica dos artefatos produzidos.
+
+Apesar dos avanços, diferentes modelos podem produzir estratégias distintas para uma mesma unidade de código, variando na quantidade de casos, nas expectativas formuladas e na utilização de mocks. Assim, este trabalho investiga a seguinte questão de pesquisa: \textit{como ChatGPT, Claude e Gemini se comportam na geração de testes automatizados em Jest para as mesmas unidades de código JavaScript, considerando a executabilidade e o sucesso das suítes produzidas?}
+
+\section{Objetivos}
+
+\subsection{Objetivo Geral}
+
+Avaliar comparativamente a capacidade de ChatGPT, Claude e Gemini na geração automatizada de testes em Jest para unidades de código JavaScript pertencentes a uma aplicação real, considerando a executabilidade e o sucesso das suítes produzidas sob um protocolo experimental padronizado.
+
+\subsection{Objetivos Específicos}
+
+Os objetivos específicos consistiram em: selecionar 30 unidades de código e organizá-las em três níveis de dificuldade; submeter as mesmas unidades às três LLMs com um prompt padronizado; preservar a primeira resposta válida sem refinamento; executar automaticamente as suítes produzidas; validar o ambiente por meio de um oráculo independente; mensurar executabilidade, sucesso integral, quantidade e aprovação de casos Jest; comparar os modelos descritiva e estatisticamente; e analisar os principais tipos de falha observados.
+
+\section{Materiais e Métodos}
+
+\subsection{Delineamento Experimental}
+
+Foi conduzido um experimento quantitativo e comparativo com medidas relacionadas, uma vez que as mesmas 30 unidades de código foram submetidas às três LLMs. A amostra foi extraída de uma aplicação real desenvolvida em JavaScript/Node.js. As unidades foram classificadas previamente em três níveis: 10 fáceis, 10 médias e 10 difíceis.
+
+Foram avaliados os modelos GPT-5.6 Sol, Claude Sonnet 5 e Gemini 3.1 Pro. Cada unidade foi submetida independentemente aos três modelos, totalizando 90 respostas. O prompt determinava que a LLM analisasse apenas o código fornecido, gerasse testes compatíveis com Jest, utilizasse mocks quando necessários, incluísse cenários positivos, negativos e de borda e retornasse somente o conteúdo do arquivo de teste.
+
+Foi preservada a primeira resposta válida de cada modelo. Não foram realizados ciclos de feedback, correção ou refinamento das respostas. Essa decisão permitiu avaliar a capacidade de geração inicial dos modelos sob condições comparáveis e aproxima-se de protocolos de avaliação que preservam a primeira solução produzida \cite{oliveira2025qualidade}.
+
+\subsection{Ambiente e Execução}
+
+A execução foi realizada em Windows 11 Pro, com Node.js 24.15.0 e Jest 30.5.0. As dependências do projeto-base foram instaladas preservando as versões definidas pelo projeto. As 90 suítes geradas foram mantidas sem alteração manual.
+
+Como os arquivos de teste estavam armazenados fora da árvore original do backend, foi necessária uma normalização do harness de execução para resolução das dependências legítimas do projeto. Essa normalização limitou-se ao ambiente e aos caminhos de módulos existentes, sem corrigir imports inventados, expectativas incorretas ou mocks defeituosos produzidos pelas LLMs.
+
+Um oráculo independente composto por 30 testes de referência foi executado antes da avaliação das LLMs. As 30 suítes e os 30 casos do oráculo foram aprovados, validando as unidades selecionadas e o ambiente de execução.
+
+Os artefatos experimentais, scripts, respostas e resultados foram organizados em repositório público para permitir rastreabilidade e reprodução do estudo: \url{https://github.com/Jacksonss06/ENGENHARIADESOFTWARELLL}.
+
+\subsection{Métricas e Análise Estatística}
+
+O desfecho principal foi o \textit{sucesso integral da suíte}, variável binária definida como 1 quando todos os casos da suíte foram executados e aprovados e 0 nos demais estados. Também foram analisados executabilidade, quantidade de casos Jest executados, quantidade de casos aprovados e taxa de aprovação.
+
+Como as mesmas unidades foram avaliadas pelos três modelos, as observações são pareadas. Para o desfecho binário principal foi utilizado o teste Q de Cochran, seguido, de forma exploratória, por comparações pareadas de McNemar com correção de Holm. Para a quantidade de casos Jest executados foi utilizado o teste de Friedman e, nas comparações pós-hoc, o teste de Wilcoxon signed-rank com correção de Holm. A escolha de métodos adequados a experimentos de Engenharia de Software com amostras pequenas e medidas relacionadas é consistente com recomendações metodológicas contemporâneas \cite{kitchenham2024small}. Adotou-se nível de significância de 5\%.
+
+Os casos Jest individuais não foram tratados como observações estatisticamente independentes, pois pertenciam às mesmas unidades e as LLMs produziram quantidades diferentes de casos.
+
+\section{Resultados}
+
+\subsection{Resultado Global}
+
+Foram avaliadas 90 suítes. Destas, 87 foram executáveis (96,67\%) e 78 apresentaram sucesso integral (86,67\%). Nove suítes inicializaram, mas apresentaram pelo menos uma falha, e três apresentaram erro de inicialização. No total, foram executados 841 casos Jest, dos quais 814 foram aprovados e 27 falharam, resultando em taxa global de aprovação de 96,79\%.
+
+\begin{table}[H]
+\centering
+\caption{Resultados consolidados por LLM.}
+\label{tab:resultados-llm}
+\begin{tabular}{lrrrrr}
+\toprule
+LLM & Exec. & Sucesso & Casos & Aprov. & Taxa casos \\
+\midrule
+ChatGPT & 30/30 & 29/30 & 249 & 248 & 99,60\% \\
+Claude   & 29/30 & 25/30 & 348 & 327 & 93,97\% \\
+Gemini   & 28/30 & 24/30 & 244 & 239 & 97,95\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O ChatGPT apresentou 96,67\% de sucesso integral, o Claude 83,33\% e o Gemini 80,00\%. Embora o ChatGPT tenha obtido a maior taxa descritiva, o teste Q de Cochran não identificou diferença global estatisticamente significativa entre os modelos ($Q(2)=3,818$, $p=0,148$). As comparações exatas de McNemar, após correção de Holm, também não foram significativas.
+
+\subsection{Quantidade de Casos Jest}
+
+O Claude executou 348 casos, frente a 249 do ChatGPT e 244 do Gemini. O teste de Friedman identificou diferença estatisticamente significativa ($\chi^2(2)=21,876$, $p=0,000018$), com $W$ de Kendall igual a 0,365. As comparações pós-hoc indicaram diferença entre Claude e ChatGPT ($p_{Holm}=0,001057$) e entre Claude e Gemini ($p_{Holm}=0,000881$), mas não entre ChatGPT e Gemini ($p_{Holm}=0,835417$).
+
+\subsection{Resultados por Dificuldade}
+
+\begin{table}[H]
+\centering
+\caption{Taxa de sucesso integral por nível de dificuldade.}
+\label{tab:dificuldade}
+\begin{tabular}{lrrr}
+\toprule
+LLM & Fácil & Médio & Difícil \\
+\midrule
+ChatGPT & 100\% & 100\% & 90\% \\
+Claude   & 80\%  & 90\%  & 80\% \\
+Gemini   & 80\%  & 100\% & 60\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Não foi observada redução monotônica do desempenho com o aumento da dificuldade. ChatGPT e Gemini apresentaram melhor desempenho nas unidades médias do que seria esperado por uma relação estritamente crescente entre dificuldade e falha, e o Claude também obteve maior sucesso no grupo médio do que no fácil.
+
+\section{Discussão}
+
+Os resultados mostram que as três LLMs foram capazes de produzir suítes Jest executáveis e integralmente aprovadas para grande parte das unidades. Entretanto, a diferença entre desempenho descritivo e evidência inferencial é relevante: o ChatGPT obteve a maior taxa de sucesso integral, mas o teste Q de Cochran não forneceu evidência suficiente para concluir superioridade estatística nas condições avaliadas.
+
+Outro achado importante foi a dissociação entre quantidade e correção. O Claude executou significativamente mais casos Jest, mas apresentou menor taxa de sucesso integral e menor taxa de aprovação de casos do que o ChatGPT. Portanto, maior volume de testes não deve ser utilizado isoladamente como indicador de qualidade. Essa observação é compatível com estudos que defendem avaliações mais fortes dos testes gerados, incluindo mutation testing, para investigar sua capacidade de revelar defeitos \cite{dakhel2024mutap}.
+
+As falhas observadas estiveram principalmente relacionadas a expectativas divergentes do comportamento implementado e ao uso inadequado de mocks. Houve casos envolvendo comparação por identidade de objetos \texttt{Date}, expectativas de exceções inexistentes na implementação, mocks de construtores que não interceptaram as instâncias utilizadas e substituição incompleta do módulo \texttt{mongoose}, impedindo o carregamento de modelos que dependiam de \texttt{Schema}.
+
+Esses resultados reforçam que a geração de testes exige mais do que sintaxe correta. Em unidades com dependências, a LLM precisa compreender o mecanismo de módulos, configurar mocks compatíveis e formular expectativas aderentes ao comportamento efetivamente implementado. O TestPilot, avaliado por Schäfer et al. \cite{schaefer2024testpilot}, utiliza realimentação para reparar testes que falham; diferentemente, o presente estudo preservou a primeira resposta válida para medir a geração inicial sem intervenção.
+
+Os resultados também se relacionam ao estudo de Lima e Lima \cite{lima2026llms}, que identificou potencial das LLMs na geração de casos de teste, mas destacou a necessidade de avaliação crítica dos artefatos. No presente experimento, essa necessidade foi observada diretamente durante a execução das suítes: respostas aparentemente plausíveis puderam falhar por divergências semânticas ou problemas de isolamento de dependências.
+
+A classificação de dificuldade, por sua vez, não explicou isoladamente o desempenho. O comportamento não monotônico sugere que características específicas das unidades, como datas, exceções, modelos de dados e dependências externas, podem influenciar a geração de testes de forma mais direta do que uma classificação global em fácil, médio e difícil.
+
+\subsection{Limitações}
+
+O estudo utilizou 30 unidades provenientes de uma única aplicação JavaScript e três versões específicas de LLMs. Foi empregado um único prompt e somente a primeira resposta válida de cada modelo. Portanto, os resultados não devem ser generalizados automaticamente para outros projetos, linguagens, frameworks, prompts ou versões de modelos.
+
+A avaliação concentrou-se em executabilidade, sucesso integral e aprovação dos casos. Não foram utilizadas métricas como cobertura de branches, mutation score ou capacidade de detecção de defeitos inseridos artificialmente. Além disso, a quantidade de casos Jest executados inclui valor zero quando uma suíte não inicializa; esse valor representa ausência de execução, não ausência de testes no arquivo produzido.
+
+\section{Conclusão}
+
+Este trabalho comparou ChatGPT, Claude e Gemini na geração automatizada de testes Jest para 30 unidades JavaScript de uma aplicação real. Das 90 suítes produzidas, 96,67\% foram executáveis e 86,67\% obtiveram sucesso integral. Foram executados 841 casos Jest, com taxa global de aprovação de 96,79\%.
+
+O ChatGPT apresentou o maior sucesso integral descritivo, mas não foi identificada diferença estatisticamente significativa entre os modelos para o desfecho principal. O Claude, por outro lado, executou quantidade significativamente maior de casos Jest, mostrando que volume de testes e sucesso das suítes constituem dimensões distintas.
+
+Conclui-se que as LLMs avaliadas apresentam potencial como ferramentas de apoio à elaboração inicial de testes automatizados, mas os artefatos produzidos não devem ser aceitos apenas por sua aparência ou quantidade. Execução automatizada e revisão técnica permanecem necessárias, especialmente em cenários que envolvem mocks, dependências e tratamento de exceções.
+
+Como trabalhos futuros, recomenda-se ampliar o número de projetos e unidades, avaliar outras linguagens e versões de modelos e incorporar cobertura, mutation testing e defeitos controlados para investigar não apenas se os testes passam, mas sua capacidade efetiva de detectar falhas \cite{dakhel2024mutap}.
+
+\bibliographystyle{sbc}
+\bibliography{referencias}
+
+\end{document}
